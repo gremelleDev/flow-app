@@ -1,35 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// File: src/App.tsx
+import { useState } from 'react';
+import { Sidebar } from './components/Sidebar';
+import { TopBar } from './components/TopBar';
+
+// Import all our page components
+import { DashboardPage } from './pages/DashboardPage';
+import { CampaignsPage } from './pages/CampaignsPage';
+import { BroadcastsPage } from './pages/BroadcastsPage';
+import { SubscribersPage } from './pages/SubscribersPage';
+import { FormsPage } from './pages/FormsPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { SettingsPage } from './pages/SettingsPage';
+
+// A mapping from page ID to the actual component
+const pageComponents: { [key: string]: React.ComponentType } = {
+  dashboard: DashboardPage,
+  campaigns: CampaignsPage,
+  broadcasts: BroadcastsPage,
+  subscribers: SubscribersPage,
+  forms: FormsPage,
+  analytics: AnalyticsPage,
+  settings: SettingsPage,
+};
 
 function App() {
-  const [count, setCount] = useState(0)
+  // useState hook to keep track of the currently active page
+  const [activePage, setActivePage] = useState('dashboard');
+
+  // Get the component to render based on the active page state
+  const ActivePageComponent = pageComponents[activePage];
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="flex h-screen bg-gray-100 font-sans">
+      <Sidebar activePage={activePage} setActivePage={setActivePage} />
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <TopBar />
+
+        <main className="flex-1 p-6 overflow-y-auto">
+          {ActivePageComponent && <ActivePageComponent />}
+        </main>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;

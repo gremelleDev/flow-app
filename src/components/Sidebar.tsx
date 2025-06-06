@@ -7,6 +7,7 @@ import {
 interface SidebarProps {
   activePage: string;
   setActivePage: (page: string) => void;
+  showTenants: boolean;    // ← Super Admin Only
 }
 
 const navItems = [
@@ -16,9 +17,10 @@ const navItems = [
   { id: 'subscribers', label: 'Subscribers', icon: Users },
   { id: 'forms', label: 'Forms', icon: Code2 },
   { id: 'analytics', label: 'Analytics', icon: BarChart2 },
+  
 ];
 
-export const Sidebar = ({ activePage, setActivePage }: SidebarProps) => {
+export const Sidebar = ({ activePage, setActivePage, showTenants }: SidebarProps) => {
   return (
     <aside className="w-64 flex-shrink-0 flex flex-col bg-gray-800 text-gray-300">
       <div className="h-16 flex-shrink-0 flex items-center justify-center px-4">
@@ -46,6 +48,22 @@ export const Sidebar = ({ activePage, setActivePage }: SidebarProps) => {
             </a>
           );
         })}
+
+        {showTenants && (
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setActivePage('tenants');
+            }}
+            className={`flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
+              activePage === 'tenants' ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-700 hover:text-white'
+            }`}
+          >
+            <Users className="h-6 w-6 mr-3" />
+            Tenants
+          </a>
+        )}
       </nav>
 
       <div className="px-2 py-4 flex-shrink-0">

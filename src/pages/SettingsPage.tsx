@@ -10,9 +10,9 @@ import { type TenantSettings } from '../utils/api'; // Use inline `type`
  */
 interface FormState {
   name: string;
-  sendingDomain: string;
-  provider: 'resend';
+  provider: 'resend' | 'brevo';
   apiKey: string;
+  sendingDomain: string;
   corsDomains: string;
 }
 
@@ -31,9 +31,9 @@ export const SettingsPage = () => {
   // This makes it easy to handle multiple input fields.
   const [formState, setFormState] = useState<FormState>({
     name: '',
-    sendingDomain: '',
     provider: 'resend',
     apiKey: '',
+    sendingDomain: '',
     corsDomains: '',
   });
 

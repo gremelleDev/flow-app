@@ -2,11 +2,11 @@
 
 export interface TenantSettings {
   name: string;
-  sendingDomain: string;
-  provider: 'resend'; // We can add more providers here later
+  provider: 'resend'| 'brevo'; // We can add more providers here later
   credentials: {
     apiKey: string;
   };
+  sendingDomain: string;
   corsDomains: string[];
 }
 

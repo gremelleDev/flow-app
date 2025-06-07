@@ -3,7 +3,10 @@
 export interface TenantSettings {
   name: string;
   sendingDomain: string;
-  encryptedResendApiKey: string;
+  provider: 'resend'; // We can add more providers here later
+  credentials: {
+    apiKey: string;
+  };
   corsDomains: string[];
 }
 
@@ -13,6 +16,8 @@ export interface Subscriber {
   status: 'active' | 'unsubscribed';
   subscribedAt: string;
   campaignProgress: any[];
+  campaignName?: string;
+  formName?: string;
 }
 
 export interface Campaign {
@@ -65,16 +70,34 @@ export function getSubscribers(): Promise<Subscriber[]> {
       status: 'active',
       subscribedAt: '2025-06-06T17:10:00Z',
       campaignProgress: [],
+      campaignName: 'Welcome Series',  // ← stub value
+      formName: 'Homepage Signup',     // ← stub value
     },
   ]);
 }
 
-// 5. Update tenant settings (stub)
-export function updateTenantSettings(
+// 5. Update tenant settings (NOW A REAL API CALL)
+export async function updateTenantSettings(
   settings: TenantSettings
-): Promise<{ success: boolean }> {
-  console.log('updateTenantSettings stub called with:', settings);
-  return Promise.resolve({ success: true });
+): Promise<{ success: boolean; message: string }> {
+  
+  // Our frontend now sends a PUT request to our new Cloudflare Function.
+  const response = await fetch('/api/settings', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(settings),
+  });
+
+  if (!response.ok) {
+    // If the server returns an error, try to parse the message,
+    // otherwise throw a generic error.
+    const errorResult = await response.json().catch(() => ({}));
+    throw new Error(errorResult.message || 'Failed to save settings');
+  }
+
+  return response.json();
 }
 
 // 6. Public subscribe endpoint (stub)

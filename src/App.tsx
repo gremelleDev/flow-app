@@ -35,10 +35,10 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
-      <Sidebar activePage={activePage} setActivePage={setActivePage} showTenants={true} />
+      <Sidebar activePage={activePage} setActivePage={setActivePage} showTenants={isSuperAdmin} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar />
+        <TopBar isSuperAdmin={isSuperAdmin} />
 
         <main className="flex-1 p-6 overflow-y-auto">
           {ActivePageComponent && <ActivePageComponent />}

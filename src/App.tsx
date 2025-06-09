@@ -28,6 +28,7 @@ const pageComponents: { [key: string]: React.ComponentType } = {
 function App() {
   // useState hook to keep track of the currently active page
   const [activePage, setActivePage] = useState('dashboard');
+  const [tenantName, setTenantName] = useState(''); 
   const isSuperAdmin = true; // ← hardcoded for MVP
 
   // Get the component to render based on the active page state
@@ -38,7 +39,10 @@ function App() {
       <Sidebar activePage={activePage} setActivePage={setActivePage} showTenants={isSuperAdmin} />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar isSuperAdmin={isSuperAdmin} />
+        <TopBar 
+          isSuperAdmin={isSuperAdmin} 
+          tenantName={tenantName}
+        />
 
         <main className="flex-1 p-6 overflow-y-auto">
           {ActivePageComponent && <ActivePageComponent />}

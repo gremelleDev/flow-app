@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react';
 // Define the props for this component
 interface TopBarProps {
   isSuperAdmin: boolean;
+  tenantName: string;      // ← new prop
 }
 
 // CORRECTED: The component now accepts the props object.
@@ -15,11 +16,11 @@ export const TopBar = ({ isSuperAdmin }: TopBarProps) => {
         {/* Conditionally render the button OR plain text based on the prop */}
         {isSuperAdmin ? (
           <button className="ml-2 flex items-center text-gray-700 font-semibold">
-            Client A (Cornerstone Digital)
+            {label}
             <ChevronDown className="h-5 w-5 ml-1 text-gray-500" />
           </button>
         ) : (
-          <span className="ml-2 font-semibold text-gray-800">Client A (Cornerstone Digital)</span>
+          <span className="ml-2 font-semibold text-gray-800">{label}</span>
         )}
       </div>
       <div>

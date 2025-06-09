@@ -1,13 +1,14 @@
 // File: src/utils/api.ts
 
-export interface TenantSettings {
-  name: string;
-  provider: 'resend'| 'brevo'; // We can add more providers here later
+// NEW: This interface defines the shape of a single provider configuration.
+// It will be used by both the fetch and update functions.
+export interface ProviderConfig {
+  id: number;
+  displayName: string;
+  provider: 'resend' | 'brevo';
   credentials: {
     apiKey: string;
   };
-  sendingDomain: string;
-  corsDomains: string[];
 }
 
 export interface Subscriber {
@@ -76,18 +77,18 @@ export function getSubscribers(): Promise<Subscriber[]> {
   ]);
 }
 
-// 5. Update tenant settings (NOW A REAL API CALL)
-export async function updateTenantSettings(
-  settings: TenantSettings
+// 5. Update tenant provider settings
+export async function updateProviders(
+  providers: ProviderConfig[]
 ): Promise<{ success: boolean; message: string }> {
   
-  // Our frontend now sends a PUT request to our new Cloudflare Function.
+  // Our frontend now sends a PUT request with the entire provider array.
   const response = await fetch('/api/settings', {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(settings),
+    body: JSON.stringify(providers),
   });
 
   if (!response.ok) {
@@ -115,40 +116,19 @@ export function subscribePublic(
   return Promise.resolve({ success: true, message: 'Subscribed (stub)' });
 }
 
-/** Shape of the settings payload the server returns */
-export interface StoredTenantSettings {
-  success: true;
-  settings: {
-    name: string;
-    provider: 'resend' | 'brevo';
-    credentials: { apiKey: string };
-    sendingDomain: string;
-    corsDomains: string[];
-  };
-}
-
 /**
- * Fetches the current tenant settings from the backend.
- * If none exist (404), returns a default empty settings object.
+ * Fetches the current provider configurations from the backend.
+ * Expects the API to return an array of ProviderConfig objects.
  */
-export async function fetchTenantSettings(): Promise<StoredTenantSettings> {
+export async function fetchProviders(): Promise<ProviderConfig[]> {
   const res = await fetch('/api/settings');
-  // If no settings have been stored yet, return empty defaults
-  if (res.status === 404) {
-    return {
-      success: true,
-      settings: {
-        name: '',
-        provider: 'resend',
-        credentials: { apiKey: '' },
-        sendingDomain: '',
-        corsDomains: [],
-      },
-    };
-  }
+
   if (!res.ok) {
+    // Handle potential server errors
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'Failed to load settings');
+    throw new Error(err.message || 'Failed to load provider settings');
   }
-  return (await res.json()) as StoredTenantSettings;
+  
+  // The backend now returns the array directly, even if it's empty.
+  return (await res.json()) as ProviderConfig[];
 }

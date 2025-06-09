@@ -28,7 +28,7 @@ const pageComponents: { [key: string]: React.ComponentType } = {
 function App() {
   // useState hook to keep track of the currently active page
   const [activePage, setActivePage] = useState('dashboard');
-  const [tenantName, setTenantName] = useState(''); 
+  const tenantName = ''; 
   const isSuperAdmin = true; // ← hardcoded for MVP
 
   // Get the component to render based on the active page state

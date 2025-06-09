@@ -1,7 +1,7 @@
 // File: src/pages/SettingsPage.tsx
 
-import { useState } from 'react';
-import { updateTenantSettings } from '../utils/api';
+import { useState, useEffect } from 'react';
+import { fetchTenantSettings, updateTenantSettings } from '../utils/api';
 import { type TenantSettings } from '../utils/api'; // Use inline `type`
 
 /**
@@ -40,6 +40,24 @@ export const SettingsPage = () => {
   // `useState` hook to manage the feedback message shown to the user after saving.
   // It can be a success message or an error message. It's null by default.
   const [message, setMessage] = useState<string | null>(null);
+
+  // Load the current tenant settings when the component first mounts
+useEffect(() => {
+  fetchTenantSettings()
+    .then(({ settings }) => {
+      setFormState({
+        name: settings.name,
+        provider: settings.provider,
+        apiKey: settings.credentials.apiKey,
+        sendingDomain: settings.sendingDomain,
+        corsDomains: settings.corsDomains.join(', '),
+      });
+    })
+    .catch(err => {
+      console.error('Could not load tenant settings:', err);
+    });
+}, []);
+
 
   // -----------------------------------------------------------------------------
   // Event Handlers

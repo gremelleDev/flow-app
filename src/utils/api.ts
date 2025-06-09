@@ -114,3 +114,27 @@ export function subscribePublic(
   );
   return Promise.resolve({ success: true, message: 'Subscribed (stub)' });
 }
+
+/** Shape of the settings payload the server returns */
+export interface StoredTenantSettings {
+  success: true;
+  settings: {
+    name: string;
+    provider: 'resend' | 'brevo';
+    credentials: { apiKey: string };
+    sendingDomain: string;
+    corsDomains: string[];
+  };
+}
+
+/**
+ * Fetches the current tenant settings from the backend.
+ */
+export async function fetchTenantSettings(): Promise<StoredTenantSettings> {
+  const res = await fetch('/api/settings');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to load settings');
+  }
+  return (await res.json()) as StoredTenantSettings;
+}

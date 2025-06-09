@@ -1,4 +1,6 @@
 // File: functions/api/settings.ts
+/// <reference types="@cloudflare/workers-types" />
+
 
 /** The new, generic shape of our settings data from the frontend. */
 interface GenericTenantSettings {
@@ -64,7 +66,7 @@ export function getSubscribers(): Promise<Subscriber[]> {
  * @returns A promise that resolves with the server's response.
  */
 export async function updateTenantSettings(
-  settings: TenantSettings
+  settings: GenericTenantSettings
 ): Promise<{ success: boolean; message: string }> {
   const response = await fetch('/api/settings', {
     method: 'PUT',
@@ -72,7 +74,8 @@ export async function updateTenantSettings(
     body: JSON.stringify(settings),
   });
 
-  const result = await response.json();
+   // Always parse JSON into a known shape
+   const result = (await response.json()) as { success: boolean; message: string };
 
   if (!response.ok) {
     // If the server returns an error (e.g., 400, 500), throw an error
@@ -129,5 +132,38 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
     console.error("Error in settings function:", error.message);
     const errorResponse = JSON.stringify({ success: false, message: 'An internal server error occurred.' });
     return new Response(errorResponse, { status: 500, headers: { 'Content-Type': 'application/json' } });
+  }
+};
+
+/**
+ * Handles GET requests to /api/settings.
+ * Retrieves the tenant's settings from KV and returns them.
+ */
+export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+  try {
+    // TODO: Replace with real tenantId from auth in the future
+    const tenantId = 'tenant_superadmin_test_01';
+    const key = `tenant::${tenantId}`;
+
+    // Fetch stored settings
+    const raw = await env.FLOW_KV.get(key);
+    if (!raw) {
+      return new Response(
+        JSON.stringify({ success: false, message: 'No settings found.' }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const settings = JSON.parse(raw);
+    return new Response(
+      JSON.stringify({ success: true, settings }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (err: any) {
+    console.error('Error in GET /api/settings:', err);
+    return new Response(
+      JSON.stringify({ success: false, message: 'Internal error.' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 };

@@ -129,9 +129,23 @@ export interface StoredTenantSettings {
 
 /**
  * Fetches the current tenant settings from the backend.
+ * If none exist (404), returns a default empty settings object.
  */
 export async function fetchTenantSettings(): Promise<StoredTenantSettings> {
   const res = await fetch('/api/settings');
+  // If no settings have been stored yet, return empty defaults
+  if (res.status === 404) {
+    return {
+      success: true,
+      settings: {
+        name: '',
+        provider: 'resend',
+        credentials: { apiKey: '' },
+        sendingDomain: '',
+        corsDomains: [],
+      },
+    };
+  }
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'Failed to load settings');

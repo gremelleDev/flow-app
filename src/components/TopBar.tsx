@@ -9,6 +9,8 @@ interface TopBarProps {
 
 // CORRECTED: The component now accepts the props object.
 export const TopBar = ({ isSuperAdmin }: TopBarProps) => {
+  const label = tenantName || 'Select Tenant'; // placeholder if empty
+  
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
        <div>

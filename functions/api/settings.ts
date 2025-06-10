@@ -124,7 +124,14 @@ export const onRequestPut: PagesFunction<Env> = async (context) => {
       return p;
     }));
 
-    await env.FLOW_KV.put(key, JSON.stringify(encryptedProviders));
+     // --- Data Storage (with cleanup logic) ---
+    if (encryptedProviders.length === 0) {
+      // If the final array of providers is empty, delete the key from KV.
+      await env.FLOW_KV.delete(key);
+    } else {
+      // Otherwise, save the full encrypted array to KV.
+      await env.FLOW_KV.put(key, JSON.stringify(encryptedProviders));
+    }
 
     const successResponse = JSON.stringify({ success: true, message: 'Settings saved successfully!' });
     return new Response(successResponse, { status: 200, headers: { 'Content-Type': 'application/json' } });

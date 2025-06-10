@@ -1,5 +1,5 @@
 name = "flow-app"
-account_id = "cb42eff93988888f69b2643fa2d188e5"
+account_id = "30178101df3777d9213a05927ee021f9"
 compatibility_date = "2025-06-10"
 
 # Tell Pages where your static build lives
@@ -15,4 +15,4 @@ directory = "dist"
 # Bind your KV namespace
 [[kv_namespaces]]
   binding = "FLOW_KV"
-  id = "caf0cbf0b6c641829984345e04f3beb2"
+  id = "6637815cef4d46b592f659281b22836f"

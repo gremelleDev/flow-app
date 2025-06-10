@@ -1,4 +1,5 @@
 // File: src/App.tsx
+
 import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
@@ -12,6 +13,7 @@ import { FormsPage } from './pages/FormsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { TenantsPage } from './pages/TenantsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { LoginPage } from './pages/LoginPage';
 
 // A mapping from page ID to the actual component
 const pageComponents: { [key: string]: React.ComponentType } = {
@@ -27,10 +29,17 @@ const pageComponents: { [key: string]: React.ComponentType } = {
 
 function App() {
   // useState hook to keep track of the currently active page
-  const [activePage, setActivePage] = useState('dashboard');
+  const [activePage, setActivePage] = useState('login');
   const [tenantName, setTenantName] = useState(''); 
   const tenants = ['Client A', 'Client B'];  // ← replace with real data later
   const isSuperAdmin = true; // ← hardcoded for MVP
+
+  // --- LOGIN LOGIC ---
+  // If we are on the 'login' page, render it by itself without the sidebar/topbar.
+  if (activePage === 'login') {
+    // Pass the setActivePage function as a prop
+    return <LoginPage setActivePage={setActivePage} />;
+}
 
   // Get the component to render based on the active page state
   const ActivePageComponent = pageComponents[activePage];

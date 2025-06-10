@@ -2,10 +2,6 @@ name = "flow-app"
 account_id = "cb42eff93988888f69b2643fa2d188e5"
 compatibility_date = "2025-06-10"
 
-# Configuration for Cloudflare Pages
-pages_build_output_dir = "dist"
-pages_build_command = "npm run build"
-
 # Tell Wrangler where your Functions are
 [functions]
   # Any TS/JS files under functions/ will be served under /api/*

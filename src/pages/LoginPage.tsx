@@ -4,12 +4,7 @@ import React, { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth'; // <-- Import Firebase auth function
 import { auth } from '../utils/firebase'; // <-- Import our configured auth service
 
-// Define the type for the props our component will receive
-interface LoginPageProps {
-    setActivePage: (page: string) => void;
-  }
-
-  export function LoginPage({ setActivePage }: LoginPageProps) { // <-- Accept props
+  export function LoginPage() { // <-- Accept props
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,17 +17,17 @@ interface LoginPageProps {
     setError(null);
 
     try {
-      // Send the email and password to Firebase for authentication
+      // On success, we just need to sign in. The listener in App.tsx will handle the navigation.
       await signInWithEmailAndPassword(auth, email, password);
-      
-      
-      // On success, navigate to the dashboard!
-      setActivePage('dashboard');
-
+            
     } catch (err: any) {
       // On failure:
       console.error('Login error:', err.message);
-      setError('Failed to sign in. Please check your email and password.');
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError('An unexpected error occurred. Please try again later.');
+      }
     } finally {
       // Stop the loading indicator whether it succeeded or failed
       setLoading(false);

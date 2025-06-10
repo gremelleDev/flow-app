@@ -1,6 +1,8 @@
 // File: src/App.tsx
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // <-- Add useEffect
+import { onAuthStateChanged, type User } from 'firebase/auth'; // <-- New import
+import { auth } from './utils/firebase'; // <-- New import
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 
@@ -28,20 +30,43 @@ const pageComponents: { [key: string]: React.ComponentType } = {
 };
 
 function App() {
-  // useState hook to keep track of the currently active page
-  const [activePage, setActivePage] = useState('login');
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true); // <-- New loading state
+  const [activePage, setActivePage] = useState('dashboard');
   const [tenantName, setTenantName] = useState(''); 
   const tenants = ['Client A', 'Client B'];  // ← replace with real data later
   const isSuperAdmin = true; // ← hardcoded for MVP
 
+// This useEffect hook runs once when the app loads
+  useEffect(() => {
+    // onAuthStateChanged returns an "unsubscribe" function
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser); // Set user to the logged-in user or null
+      setLoading(false);    // We're done loading, so hide the loading indicator
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []); // <-- Empty dependency array means this runs only once
+
   // --- LOGIN LOGIC ---
   // If we are on the 'login' page, render it by itself without the sidebar/topbar.
-  if (activePage === 'login') {
+  //if (activePage === 'login') {
     // Pass the setActivePage function as a prop
-    return <LoginPage setActivePage={setActivePage} />;
-}
+   // return <LoginPage setActivePage={setActivePage} />;
+  //}
 
-  // Get the component to render based on the active page state
+// While we're checking the auth state, show a loading message
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  }
+
+  // If we're done loading and there's no user, show the login page
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  // If we have a user, show the main dashboard
   const ActivePageComponent = pageComponents[activePage];
 
   return (

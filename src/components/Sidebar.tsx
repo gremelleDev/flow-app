@@ -24,7 +24,7 @@ export const Sidebar = ({ activePage, setActivePage, showTenants }: SidebarProps
   return (
     <aside className="w-64 flex-shrink-0 flex flex-col bg-gray-800 text-gray-300">
       <div className="h-16 flex-shrink-0 flex items-center justify-center px-4">
-        <h1 className="text-2xl font-bold text-white tracking-wider">flow.</h1>
+        <h1 className="text-2xl font-bold text-white tracking-wider">FunnelFlow.</h1>
       </div>
 
       <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">

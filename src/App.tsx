@@ -46,6 +46,10 @@ function App() {
         setUser(currentUser);
         try {
           const idTokenResult = await currentUser.getIdTokenResult();
+
+          // NEW: Log the claims to the console for debugging
+          console.log('User Claims:', idTokenResult.claims); 
+
           // Check for the superAdmin custom claim and update our state
           setIsSuperAdmin(idTokenResult.claims.superAdmin === true);
         } catch (error) {

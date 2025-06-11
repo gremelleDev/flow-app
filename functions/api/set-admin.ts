@@ -35,7 +35,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const user = await lookupUserByEmail(email, env);
 
     // 2. Set the custom claim on that user's UID
-    await setCustomUserClaims(user.localId, { superAdmin: true }, env);
+  await setCustomUserClaims(user.localId, { superAdmin: true, tenantId: 'tenant_superadmin_test_01' }, env);
 
     const successResponse = JSON.stringify({ success: true, message: `Super admin claim set for ${email}` });
     return new Response(successResponse, { status: 200, headers: { 'Content-Type': 'application/json' }});

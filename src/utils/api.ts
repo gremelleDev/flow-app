@@ -1,6 +1,7 @@
 // File: src/utils/api.ts
+import { auth } from './firebase'; // Import the auth service from our firebase.ts file
 
-// NEW: This interface defines the shape of a single provider configuration.
+// This interface defines the shape of a single provider configuration.
 // It will be used by both the fetch and update functions.
 export interface ProviderConfig {
   id: number;
@@ -29,8 +30,34 @@ export interface Campaign {
   emails: Array<{ subject: string; body: string; delayInHours: number }>;
 }
 
+// --- NEW: Reusable Authenticated Fetch Helper ---
+/**
+ * A wrapper around the native `fetch` function that automatically
+ * adds the Firebase Auth ID token to the request headers.
+ * @param url The URL to fetch.
+ * @param options The fetch options (method, body, etc.).
+ * @returns The fetch Response object.
+ */
+async function authedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('No authenticated user found. Cannot make API call.');
+  }
+
+  const token = await user.getIdToken();
+
+  const headers = new Headers(options.headers);
+  headers.append('Authorization', `Bearer ${token}`);
+  
+  return fetch(url, { ...options, headers });
+}
+
+
+// --- STUBBED FUNCTIONS (no changes) ---
+
 // 1. Fetch all campaigns for a tenant (stub)
 export function getCampaigns(): Promise<Campaign[]> {
+  // This will also need to be updated to use authedFetch when implemented.
   return Promise.resolve([
     {
       id: 'camp_1',
@@ -57,7 +84,7 @@ export function createCampaign(): Promise<{ success: boolean }> {
 export function updateCampaign(
   campaignId: string,
   data: Partial<Campaign>
-): Promise<{ success: boolean }> {
+): Promise<{ success:boolean }> {
   console.log('updateCampaign stub called with:', campaignId, data);
   return Promise.resolve({ success: true });
 }
@@ -71,7 +98,7 @@ export function getSubscribers(): Promise<Subscriber[]> {
       status: 'active',
       subscribedAt: '2025-06-06T17:10:00Z',
       campaignProgress: [],
-      campaignName: 'Welcome Series',  // ← stub value
+      campaignName: 'Welcome Series',   // ← stub value
       formName: 'Homepage Signup',     // ← stub value
     },
   ]);
@@ -83,7 +110,8 @@ export async function updateProviders(
 ): Promise<{ success: boolean; message: string }> {
   
   // Our frontend now sends a PUT request with the entire provider array.
-  const response = await fetch('/api/settings', {
+  // CHANGED: Using authedFetch instead of fetch
+  const response = await authedFetch('/api/settings', {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -121,7 +149,8 @@ export function subscribePublic(
  * Expects the API to return an array of ProviderConfig objects.
  */
 export async function fetchProviders(): Promise<ProviderConfig[]> {
-  const res = await fetch('/api/settings');
+  // CHANGED: Using authedFetch instead of fetch
+  const res = await authedFetch('/api/settings');
 
   if (!res.ok) {
     // Handle potential server errors

@@ -1,8 +1,8 @@
 // File: src/App.tsx
 
-import { useState, useEffect } from 'react'; // <-- Add useEffect
-import { onAuthStateChanged, type User } from 'firebase/auth'; // <-- New import
-import { auth } from './utils/firebase'; // <-- New import
+import { useState, useEffect } from 'react';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { auth } from './utils/firebase';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 
@@ -25,38 +25,46 @@ const pageComponents: { [key: string]: React.ComponentType } = {
   subscribers: SubscribersPage,
   forms: FormsPage,
   analytics: AnalyticsPage,
-  tenants:   TenantsPage,     // ← Super Admin Only
+  tenants:   TenantsPage,      // ← Super Admin Only
   settings: SettingsPage,
 };
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true); // <-- New loading state
+  const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false); // <-- Now managed by state
   const [activePage, setActivePage] = useState('dashboard');
   const [tenantName, setTenantName] = useState(''); 
-  const tenants = ['Client A', 'Client B'];  // ← replace with real data later
-  const isSuperAdmin = true; // ← hardcoded for MVP
+  const tenants = ['Client A', 'Client B'];   // ← replace with real data later
 
-// This useEffect hook runs once when the app loads
+  // This useEffect hook runs once when the app loads
   useEffect(() => {
     // onAuthStateChanged returns an "unsubscribe" function
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser); // Set user to the logged-in user or null
-      setLoading(false);    // We're done loading, so hide the loading indicator
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        // User is logged in, now check for admin claim
+        setUser(currentUser);
+        try {
+          const idTokenResult = await currentUser.getIdTokenResult();
+          // Check for the superAdmin custom claim and update our state
+          setIsSuperAdmin(idTokenResult.claims.superAdmin === true);
+        } catch (error) {
+          console.error("Error fetching user claims:", error);
+          setIsSuperAdmin(false);
+        }
+      } else {
+        // User is logged out, reset user and admin status
+        setUser(null);
+        setIsSuperAdmin(false);
+      }
+      setLoading(false);      // We're done loading, so hide the loading indicator
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []); // <-- Empty dependency array means this runs only once
 
-  // --- LOGIN LOGIC ---
-  // If we are on the 'login' page, render it by itself without the sidebar/topbar.
-  //if (activePage === 'login') {
-    // Pass the setActivePage function as a prop
-   // return <LoginPage setActivePage={setActivePage} />;
-  //}
-
-// While we're checking the auth state, show a loading message
+  // While we're checking the auth state, show a loading message
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }

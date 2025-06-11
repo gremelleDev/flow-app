@@ -123,3 +123,31 @@ export async function setCustomUserClaims(uid: string, claims: object, env: any)
     throw new Error(`Failed to set custom claims: ${error.error.message}`);
   }
 }
+
+/**
+ * Verifies a Firebase ID token using Google's public keys.
+ * @param token The Firebase ID token string.
+ * @param env The environment object from Cloudflare.
+ * @returns The decoded claims payload from the token.
+ */
+export async function verifyIdToken(token: string, env: any) {
+  const serviceAccount: ServiceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
+  const FIREBASE_PROJECT_ID = serviceAccount.project_id;
+  
+  // The issuer and audience fields must match the project
+  const issuer = `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`;
+  const audience = FIREBASE_PROJECT_ID;
+
+  // Fetch Google's public keys to verify the token signature
+  const JWKS = jose.createRemoteJWKSet(
+    new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com')
+  );
+
+  // Verify the token
+  const { payload } = await jose.jwtVerify(token, JWKS, {
+    issuer,
+    audience,
+  });
+
+  return payload;
+}

@@ -1,29 +1,13 @@
 // File: functions/api/set-admin.ts
 /// <reference types="@cloudflare/workers-types" />
-import * as admin from 'firebase-admin';
+
+// Import our new, lightweight helper functions
+import { lookupUserByEmail, setCustomUserClaims } from '../utils/firebase-admin-api';
 
 // Define the environment bindings we expect to be available
 interface Env {
   FIREBASE_SERVICE_ACCOUNT: string;
-  ADMIN_SECRET_KEY: string; // <-- Our new security key
-}
-
-/**
- * Initializes the Firebase Admin SDK.
- * It ensures initialization only happens once.
- * @param env - The environment object from Cloudflare.
- */
-function initializeFirebaseAdmin(env: Env) {
-  if (admin.apps.length > 0) {
-    return;
-  }
-  
-  // Parse the service account key from the environment variable
-  const serviceAccount = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
-
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+  ADMIN_SECRET_KEY: string;
 }
 
 /**
@@ -35,7 +19,6 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const { request, env } = context;
 
     // --- Security Check ---
-    // Check for our secret admin key in the headers
     const adminKey = request.headers.get('X-Admin-Secret');
     if (adminKey !== env.ADMIN_SECRET_KEY) {
       return new Response('Unauthorized', { status: 401 });
@@ -45,26 +28,21 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     if (!email) {
       return new Response(JSON.stringify({ success: false, message: 'Email is required.' }), { status: 400 });
     }
-
-    // Initialize the Firebase Admin SDK
-    initializeFirebaseAdmin(env);
     
-    // Get the user by their email
-    const user = await admin.auth().getUserByEmail(email);
+    // --- Core Logic using our new helper functions ---
+    
+    // 1. Look up the user by email to get their UID
+    const user = await lookupUserByEmail(email, env);
 
-    // Set the custom claim on their account
-    await admin.auth().setCustomUserClaims(user.uid, { superAdmin: true });
+    // 2. Set the custom claim on that user's UID
+    await setCustomUserClaims(user.localId, { superAdmin: true }, env);
 
     const successResponse = JSON.stringify({ success: true, message: `Super admin claim set for ${email}` });
     return new Response(successResponse, { status: 200, headers: { 'Content-Type': 'application/json' }});
 
   } catch (error: any) {
     console.error("Error in set-admin function:", error.message);
-    let errorMessage = 'An internal server error occurred.';
-    if (error.code === 'auth/user-not-found') {
-      errorMessage = 'User not found.';
-    }
-    const errorResponse = JSON.stringify({ success: false, message: errorMessage });
+    const errorResponse = JSON.stringify({ success: false, message: error.message || 'An internal server error occurred.' });
     return new Response(errorResponse, { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 };

@@ -1,9 +1,10 @@
 // File: functions/api/settings.ts
 /// <reference types="@cloudflare/workers-types" />
 
+import { authenticate } from '../utils/auth-middleware'; // <-- NEW: Import our auth middleware
+
 /**
  * Defines the shape of a single provider configuration.
- * This is the data structure we will store in an array in KV.
  */
 interface ProviderConfig {
   id: number;
@@ -14,18 +15,24 @@ interface ProviderConfig {
   };
 }
 
-/** Defines the environment bindings Cloudflare will provide to our function. */
+/** * Defines the environment bindings Cloudflare will provide to our function.
+ * NEW: It now includes all secrets needed by our authentication middleware.
+ */
 interface Env {
   FLOW_KV: KVNamespace;
-    // This key MUST be set as a secret in the Cloudflare dashboard
-    MASTER_ENCRYPTION_KEY: string;
+  MASTER_ENCRYPTION_KEY: string;
+  FIREBASE_SERVICE_ACCOUNT: string;
+  ADMIN_SECRET_KEY: string;
 }
 
-// --- CRYPTOGRAPHY HELPERS ---
+// --- CRYPTOGRAPHY HELPERS (full implementation) ---
 
 /**
- * Derives a cryptographic key from the master key string in the environment.
- * This uses SHA-256 to create a fixed-size key suitable for AES-GCM.
+ * Derives a secure cryptographic key from the master key string in the environment.
+ * This uses PBKDF2, a standard key derivation function, to make the key
+ * resistant to brute-force attacks.
+ * @param env The environment object from Cloudflare.
+ * @returns A promise that resolves to a CryptoKey suitable for AES-GCM.
  */
 async function getDerivedKey(env: Env): Promise<CryptoKey> {
   if (!env.MASTER_ENCRYPTION_KEY || env.MASTER_ENCRYPTION_KEY.length < 32) {
@@ -48,11 +55,17 @@ async function getDerivedKey(env: Env): Promise<CryptoKey> {
 }
 
 /**
- * Encrypts a plaintext string using AES-GCM.
- * The IV is prepended to the ciphertext, and the result is Base64-encoded.
+ * Encrypts a plaintext string using the AES-GCM algorithm.
+ * A new, random Initialization Vector (IV) is generated for each encryption
+ * and prepended to the ciphertext to ensure security. The result is Base64-encoded
+ * for safe storage in JSON.
+ * @param text The plaintext string to encrypt.
+ * @param key The CryptoKey to use for encryption.
+ * @returns A promise that resolves to the Base64-encoded ciphertext string.
  */
+
 async function encrypt(text: string, key: CryptoKey): Promise<string> {
-  const iv = crypto.getRandomValues(new Uint8Array(12)); // 12 bytes is recommended for AES-GCM
+  const iv = crypto.getRandomValues(new Uint8Array(12));
   const encodedText = new TextEncoder().encode(text);
   
   const encrypted = await crypto.subtle.encrypt(
@@ -70,6 +83,11 @@ async function encrypt(text: string, key: CryptoKey): Promise<string> {
 
 /**
  * Decrypts a Base64-encoded ciphertext string using AES-GCM.
+ * It separates the prepended IV from the ciphertext and uses it for decryption,
+ * which also verifies the authenticity of the data.
+ * @param encryptedText The Base64-encoded string to decrypt.
+ * @param key The CryptoKey to use for decryption.
+ * @returns A promise that resolves to the original plaintext string.
  */
 async function decrypt(encryptedText: string, key: CryptoKey): Promise<string> {
   const combined = new Uint8Array(atob(encryptedText).split('').map(c => c.charCodeAt(0)));
@@ -85,93 +103,74 @@ async function decrypt(encryptedText: string, key: CryptoKey): Promise<string> {
 
   return new TextDecoder().decode(decrypted);
 }
+// --- API FUNCTIONS (NOW SECURED) ---
 
-// --- API FUNCTIONS ---
-
-
-/**
- * Handles PUT requests to /api/settings. This function validates the incoming
- * array of provider configurations and saves it to the Cloudflare KV store.
- */
 export const onRequestPut: PagesFunction<Env> = async (context) => {
   try {
+    // --- NEW: Authentication ---
+    // This line protects the function. It will throw an error if the token is invalid.
+    const decodedToken = await authenticate(context);
+
+    // Get tenantId from the verified token, NOT from a hardcoded value.
+    const tenantId = decodedToken.tenantId as string;
+    if (!tenantId) {
+      return new Response('No tenantId found in user token.', { status: 400 });
+    }
+    
     const { request, env } = context;
     const providers: ProviderConfig[] = await request.json();
 
-    // --- Validation ---
-    // Ensure the body is an array. We can add more specific validation
-    // for each object in the array if needed later.
     if (!Array.isArray(providers)) {
-      const responseBody = JSON.stringify({ success: false, message: 'Request body must be an array of provider configurations.' });
-      return new Response(responseBody, { status: 400, headers: { 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ success: false, message: 'Request body must be an array.' }), { status: 400 });
     }
 
-    // --- Authentication & Authorization ---
-    // TODO: Add Firebase auth check here. Get tenantId from the user's custom claims.
-    const tenantId = 'tenant_superadmin_test_01'; // Hardcoded for now
-    const key = `tenant::${tenantId}`;
+    const key = `tenant::${tenantId}`; // <-- Now uses the dynamic tenantId
 
-    // --- Data Storage ---
     const cryptoKey = await getDerivedKey(env);
-
-    // Encrypt API keys before storing
     const encryptedProviders = await Promise.all(providers.map(async (p) => {
-      // Only encrypt if the key is not empty
       if (p.credentials.apiKey) {
         const encryptedKey = await encrypt(p.credentials.apiKey, cryptoKey);
         return { ...p, credentials: { ...p.credentials, apiKey: encryptedKey } };
       }
       return p;
     }));
-
-     // --- Data Storage (with cleanup logic) ---
+    
     if (encryptedProviders.length === 0) {
-      // If the final array of providers is empty, delete the key from KV.
       await env.FLOW_KV.delete(key);
     } else {
-      // Otherwise, save the full encrypted array to KV.
       await env.FLOW_KV.put(key, JSON.stringify(encryptedProviders));
     }
 
-    const successResponse = JSON.stringify({ success: true, message: 'Settings saved successfully!' });
-    return new Response(successResponse, { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, message: 'Settings saved successfully!' }), { status: 200 });
 
   } catch (error: any) {
-    console.error("Error in settings PUT function:", error.message);
-    const errorResponse = JSON.stringify({ success: false, message: 'An internal server error occurred.' });
-    return new Response(errorResponse, { status: 500, headers: { 'Content-Type': 'application/json' } });
+    // The authenticate function throws an error on failure, which this will catch.
+    return new Response(error.message, { status: 401, statusText: 'Unauthorized' });
   }
 };
 
-/**
- * Handles GET requests to /api/settings.
- * Retrieves the tenant's provider configurations from KV and returns them as an array.
- */
-export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+
+export const onRequestGet: PagesFunction<Env> = async (context) => {
   try {
-    // TODO: Replace with real tenantId from auth in the future
-    const tenantId = 'tenant_superadmin_test_01';
-    const key = `tenant::${tenantId}`;
-
-    // Fetch stored settings
-    const raw = await env.FLOW_KV.get(key);
-
-    // If no settings exist for this tenant, return an empty array.
-    // This is valid and expected by the frontend.
-    if (!raw) {
-      return new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+    // --- NEW: Authentication ---
+    const decodedToken = await authenticate(context);
+    const tenantId = decodedToken.tenantId as string;
+    if (!tenantId) {
+        return new Response('No tenantId found in user token.', { status: 400 });
     }
 
-    // --- Decryption ---
+    const { env } = context;
+    const key = `tenant::${tenantId}`; // <-- Now uses the dynamic tenantId
+
+    const raw = await env.FLOW_KV.get(key);
+
+    if (!raw) {
+      return new Response(JSON.stringify([]), { status: 200 });
+    }
+
     const cryptoKey = await getDerivedKey(env);
     const providers: ProviderConfig[] = JSON.parse(raw);
-
-    // Decrypt API keys before sending to the client
     const decryptedProviders = await Promise.all(providers.map(async (p) => {
-      // Only decrypt if the key is not empty
       if (p.credentials.apiKey) {
         const decryptedKey = await decrypt(p.credentials.apiKey, cryptoKey);
         return { ...p, credentials: { ...p.credentials, apiKey: decryptedKey } };
@@ -179,16 +178,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
       return p;
     }));
 
-    return new Response(JSON.stringify(decryptedProviders), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify(decryptedProviders), { status: 200 });
     
-  } catch (err: any) {
-    console.error('Error in GET /api/settings:', err);
-    return new Response(
-      JSON.stringify({ success: false, message: 'Internal error.' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+  } catch (error: any) {
+    // The authenticate function throws an error on failure, which this will catch.
+    return new Response(error.message, { status: 401, statusText: 'Unauthorized' });
   }
 };

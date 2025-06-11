@@ -69,44 +69,47 @@ export const TopBar = ({
   const userInitials = getInitials(user?.email); // Generate initials from the user object
 
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0">
+    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0 relative z-20">
       {/* Tenant Switcher Dropdown */}
       {/* Conditionally render the entire Tenant Switcher block only for Super Admins */}
-      {isSuperAdmin && (
-        <div ref={tenantRef} className="relative inline-block">
-          <span className="text-gray-500 text-sm">Tenant:</span>
-          <button
-            onClick={() => setTenantMenuOpen(o => !o)}
-            className="ml-2 flex items-center text-gray-700 font-semibold"
-          >
-            {label}
-            <ChevronDown className="h-5 w-5 ml-1 text-gray-500" />
-          </button>
-        
-          {tenantMenuOpen && (
-            <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-              <ul>
-                {tenants.length > 0 ? (
-                  tenants.map((t: string) => (
-                    <li
-                      key={t}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        onTenantSelect(t);
-                        setTenantMenuOpen(false);
-                      }}
-                    >
-                      {t}
-                    </li>
-                  ))
-                ) : (
-                  <li className="px-4 py-2 text-gray-500">No tenants</li>
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+      <div ref={tenantRef} className="relative inline-block">
+        {/* The container is always rendered to preserve space, but the content is conditional */}
+        {isSuperAdmin && (
+          <>
+            <span className="text-gray-500 text-sm">Tenant:</span>
+            <button
+              onClick={() => setTenantMenuOpen(o => !o)}
+              className="ml-2 flex items-center text-gray-700 font-semibold"
+            >
+              {label}
+              <ChevronDown className="h-5 w-5 ml-1 text-gray-500" />
+            </button>
+          
+            {tenantMenuOpen && (
+              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <ul>
+                  {tenants.length > 0 ? (
+                    tenants.map((t: string) => (
+                      <li
+                        key={t}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          onTenantSelect(t);
+                          setTenantMenuOpen(false);
+                        }}
+                      >
+                        {t}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-4 py-2 text-gray-500">No tenants</li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </>
+        )}
+      </div>
       
       {/* User Profile Dropdown with Logout and Dynamic Initials */}
       <div ref={userRef} className="relative">

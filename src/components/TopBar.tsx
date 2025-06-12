@@ -1,6 +1,6 @@
 // File: src/components/TopBar.tsx
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, LogOut, User as UserIcon } from 'lucide-react';  // <-- NEW: Import LogOut icon
+import { ChevronDown, LogOut, User as UserIcon, Menu } from 'lucide-react'; // <-- Import icons
 import { signOut, type User } from 'firebase/auth'; // <-- NEW: Import the signOut function
 import { auth } from '../utils/firebase';   // <-- NEW: Import our auth instance
 
@@ -10,7 +10,8 @@ interface TopBarProps {
   isSuperAdmin: boolean;
   tenantName: string;
   tenants: string[]; 
-  onTenantSelect: (tenant: string) => void; 
+  onTenantSelect: (tenant: string) => void;
+  onMenuClick: () => void; // <-- Prop for menu click handler
 }
 
 // Helper function to generate initials from an email
@@ -31,6 +32,7 @@ export const TopBar = ({
     tenantName,
     tenants,
     onTenantSelect,
+    onMenuClick,
   }: TopBarProps) => {
 
   const [tenantMenuOpen, setTenantMenuOpen] = useState(false);
@@ -70,47 +72,54 @@ export const TopBar = ({
 
   return (
     <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 flex-shrink-0 relative z-20">
+      <div className="flex items-center">
+        {/* NEW: Hamburger menu for mobile */}
+        <button onClick={onMenuClick} className="text-gray-500 mr-4 md:hidden">
+          <Menu />
+        </button>
+
       {/* Tenant Switcher Dropdown */}
       {/* Conditionally render the entire Tenant Switcher block only for Super Admins */}
-      <div ref={tenantRef} className="relative inline-block">
-        {/* The container is always rendered to preserve space, but the content is conditional */}
-        {isSuperAdmin && (
-          <>
-            <span className="text-gray-500 text-sm">Tenant:</span>
-            <button
-              onClick={() => setTenantMenuOpen(o => !o)}
-              className="ml-2 flex items-center text-gray-700 font-semibold"
-            >
-              {label}
-              <ChevronDown className="h-5 w-5 ml-1 text-gray-500" />
-            </button>
-          
-            {tenantMenuOpen && (
-              <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
-                <ul>
-                  {tenants.length > 0 ? (
-                    tenants.map((t: string) => (
-                      <li
-                        key={t}
-                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => {
-                          onTenantSelect(t);
-                          setTenantMenuOpen(false);
-                        }}
-                      >
-                        {t}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="px-4 py-2 text-gray-500">No tenants</li>
-                  )}
-                </ul>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-      
+        <div ref={tenantRef} className="relative inline-block">
+          {/* The container is always rendered to preserve space, but the content is conditional */}
+          {isSuperAdmin && (
+            <>
+              <span className="text-gray-500 text-sm">Tenant:</span>
+              <button
+                onClick={() => setTenantMenuOpen(o => !o)}
+                className="ml-2 flex items-center text-gray-700 font-semibold"
+              >
+                {label}
+                <ChevronDown className="h-5 w-5 ml-1 text-gray-500" />
+              </button>
+            
+              {tenantMenuOpen && (
+                <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                  <ul>
+                    {tenants.length > 0 ? (
+                      tenants.map((t: string) => (
+                        <li
+                          key={t}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => {
+                            onTenantSelect(t);
+                            setTenantMenuOpen(false);
+                          }}
+                        >
+                          {t}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-4 py-2 text-gray-500">No tenants</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>  
+
       {/* User Profile Dropdown with Logout and Dynamic Initials */}
       <div ref={userRef} className="relative">
         <button 

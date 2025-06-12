@@ -19,6 +19,9 @@ lerna-debug.log*
 .env.*
 !.env.example
 
+# local server variables
+.dev.vars
+
 # Editor directories and files
 .vscode
 .idea

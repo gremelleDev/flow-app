@@ -36,6 +36,7 @@ function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [tenantName, setTenantName] = useState(''); 
   const tenants = ['Client A', 'Client B'];   // ← replace with real data later
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // <-- State for sidebar visibility
 
   // This useEffect hook runs once when the app loads
   useEffect(() => {
@@ -79,7 +80,13 @@ function App() {
 
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
-      <Sidebar activePage={activePage} setActivePage={setActivePage} showTenants={isSuperAdmin} />
+      <Sidebar 
+        activePage={activePage} 
+        setActivePage={setActivePage} 
+        showTenants={isSuperAdmin} 
+        isOpen={isSidebarOpen} // <-- Pass state to Sidebar
+        setIsOpen={setIsSidebarOpen} // <-- Pass setter to Sidebar
+      />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar 
@@ -88,6 +95,7 @@ function App() {
           tenantName={tenantName}
           tenants={tenants}
           onTenantSelect={setTenantName}
+          onMenuClick={() => setIsSidebarOpen(true)} // <-- Pass handler to TopBar
         />
 
         <main className="flex-1 p-6 overflow-y-auto">

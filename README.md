@@ -144,21 +144,22 @@ We have successfully built a robust, secure, and well-architected foundation for
 * **Completed UI Polish**: We have implemented a full suite of UI and UX improvements, including a functional Logout button, a dynamic user menu, and a responsive, collapsible sidebar for mobile devices.
 * **Core Subscriber Management**: The first full-stack CRUD feature is complete and merged into `main`.
 * **API Architecture Refactor**: We have successfully refactored the Subscribers API to separate routing from business logic (`_handlers.ts`), creating a clean, scalable pattern for all future endpoints.
+* **URL-Based Routing**: We have integrated `react-router-dom` to provide persistent, bookmarkable URLs for each page in the application, fixing the "reset on refresh" issue.
 
 ### What We're Currently Working On
-The Subscribers API refactor is complete on the `chore/refactor-subscribers-api` branch. This branch is now ready for final review and merging into `main`.
+The implementation of URL-based routing is now functionally complete on the `feat/url-routing` branch. This branch is ready for final review and merging into `main`.
 
 ### Immediate Next Steps
-With the API refactor complete, our next focus is to merge this architectural improvement and then move on to enhancing the frontend's navigation logic.
+With all foundational and architectural improvements now complete, our next focus is to begin building the next core product feature.
 
-1.  **Merge Refactor Branch**: We will merge the `chore/refactor-subscribers-api` branch into `main` to ensure our primary codebase reflects the new, cleaner API pattern.
-2.  **Implement URL-Based Routing**: We will integrate the `react-router-dom` library to make application pages bookmarkable and solve the "redirect on refresh" issue, creating a more robust user experience.
+1.  **Merge Routing Branch**: We will merge the `feat/url-routing` branch into `main`. DONE
+2.  **Build Campaigns Feature**: Our next major task will be to build out the "Campaigns" feature. This will involve:
+    * Creating a new backend API (`/api/campaigns`) to handle CRUD operations for email campaigns.
+    * Building out the frontend UI on the `CampaignsPage.tsx` to allow users to create, view, update, and delete their email sequences.
 
 ### Big Milestones We're Aiming For
-After completing the immediate architectural improvements, we will continue building out the rest of the application's core functionality.
+After completing the Campaigns feature, we will continue building out the rest of the application's core functionality.
 
-* **Core MVP Features (Completion)**: Build out the Campaigns feature (UI and backend).
-    * Implement the Public Subscribe Endpoint for tenant websites.
 * **Subscriber Segmentation**:
     * Design and implement a system for adding tags and lists to subscribers.
     * Update the UI to allow for managing tags and filtering the subscriber list.

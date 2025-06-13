@@ -5,6 +5,7 @@ import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from './utils/firebase';
 import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 // Import all our page components
 import { DashboardPage } from './pages/DashboardPage';
@@ -17,23 +18,10 @@ import { TenantsPage } from './pages/TenantsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
 
-// A mapping from page ID to the actual component
-const pageComponents: { [key: string]: React.ComponentType } = {
-  dashboard: DashboardPage,
-  campaigns: CampaignsPage,
-  broadcasts: BroadcastsPage,
-  subscribers: SubscribersPage,
-  forms: FormsPage,
-  analytics: AnalyticsPage,
-  tenants:   TenantsPage,      // ← Super Admin Only
-  settings: SettingsPage,
-};
-
 function App() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false); // <-- Now managed by state
-  const [activePage, setActivePage] = useState('dashboard');
   const [tenantName, setTenantName] = useState(''); 
   const tenants = ['Client A', 'Client B'];   // ← replace with real data later
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // <-- State for sidebar visibility
@@ -70,40 +58,70 @@ function App() {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
-  // If we're done loading and there's no user, show the login page
-  if (!user) {
-    return <LoginPage />;
-  }
+// ADD this new block of code in its place
 
-  // If we have a user, show the main dashboard
-  const ActivePageComponent = pageComponents[activePage];
-
+  // The main return statement now uses the <Routes> component to define the app's structure.
   return (
-    <div className="flex h-screen bg-gray-100 font-sans">
-      <Sidebar 
-        activePage={activePage} 
-        setActivePage={setActivePage} 
-        showTenants={isSuperAdmin} 
-        isOpen={isSidebarOpen} // <-- Pass state to Sidebar
-        setIsOpen={setIsSidebarOpen} // <-- Pass setter to Sidebar
+    <Routes>
+      {/* Route 1: The Login Page. 
+        This is a public route that anyone can access.
+        Uses a ternary operator to determine if the user is logged in
+      */}
+      <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      
+      {/* Route 2: The Main Application Layout.
+        This route handles all other paths (e.g., /dashboard, /subscribers).
+        It's protected by a check: if there's no user, it redirects to /login.
+      */}
+      <Route
+        path="/*" // The "/*" matches any path not already matched
+        element={
+          !user ? (
+            // If there's no user, navigate to the login page
+            <Navigate to="/login" replace />
+          ) : (
+            // If there IS a user, render the main application layout
+            <div className="flex h-screen bg-gray-100 font-sans">
+              <Sidebar
+                // activePage and setActivePage are no longer needed
+                showTenants={isSuperAdmin}
+                isOpen={isSidebarOpen}
+                setIsOpen={setIsSidebarOpen}
+              />
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <TopBar
+                  user={user}
+                  isSuperAdmin={isSuperAdmin}
+                  tenantName={tenantName}
+                  tenants={tenants}
+                  onTenantSelect={setTenantName}
+                  onMenuClick={() => setIsSidebarOpen(true)}
+                />
+                <main className="flex-1 p-6 overflow-y-auto">
+                  {/* This is where our pages will be rendered based on the URL.
+                    This nested <Routes> block handles which component appears in the main content area.
+                  */}
+                  <Routes>
+                    <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/campaigns" element={<CampaignsPage />} />
+                    <Route path="/broadcasts" element={<BroadcastsPage />} />
+                    <Route path="/subscribers" element={<SubscribersPage />} />
+                    <Route path="/forms" element={<FormsPage />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
+                    <Route path="/tenants" element={<TenantsPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    
+                    {/* A fallback route that redirects any unknown path inside the app to the dashboard. */}
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
+                </main>
+              </div>
+            </div>
+          )
+        }
       />
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar 
-          user={user}
-          isSuperAdmin={isSuperAdmin} 
-          tenantName={tenantName}
-          tenants={tenants}
-          onTenantSelect={setTenantName}
-          onMenuClick={() => setIsSidebarOpen(true)} // <-- Pass handler to TopBar
-        />
-
-        <main className="flex-1 p-6 overflow-y-auto">
-          {ActivePageComponent && <ActivePageComponent />}
-        </main>
-      </div>
-    </div>
+    </Routes>
   );
 }
 
-export default App;
+export default App;  

@@ -12,14 +12,13 @@ export interface ProviderConfig {
   };
 }
 
+// AFTER (Use this new interface)
 export interface Subscriber {
-  fullName: string;
+  id: string;
   email: string;
+  fullName?: string;
   status: 'active' | 'unsubscribed';
-  subscribedAt: string;
-  campaignProgress: any[];
-  campaignName?: string;
-  formName?: string;
+  createdAt: string;
 }
 
 export interface Campaign {
@@ -90,18 +89,60 @@ export function updateCampaign(
 }
 
 // 4. Fetch all subscribers for a tenant (stub)
-export function getSubscribers(): Promise<Subscriber[]> {
-  return Promise.resolve([
-    {
-      fullName: 'Jane Doe',
-      email: 'jane.doe@example.com',
-      status: 'active',
-      subscribedAt: '2025-06-06T17:10:00Z',
-      campaignProgress: [],
-      campaignName: 'Welcome Series',   // ← stub value
-      formName: 'Homepage Signup',     // ← stub value
+export async function getSubscribers(): Promise<Subscriber[]> {
+  // This now makes a real, authenticated API call to our new endpoint
+  const res = await authedFetch('/api/subscribers');
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to load subscribers');
+  }
+  
+  return (await res.json()) as Subscriber[];
+}
+
+/**
+ * Creates a new subscriber by calling the POST /api/subscribers endpoint.
+ * @param data An object containing the new subscriber's email and fullName.
+ * @returns The newly created subscriber object from the API.
+ */
+export async function createSubscriber(data: { email: string, fullName?: string }): Promise<Subscriber> {
+  const res = await authedFetch('/api/subscribers', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
     },
-  ]);
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to create subscriber');
+  }
+
+  return (await res.json()) as Subscriber;
+}
+
+// Add this new function to src/utils/api.ts
+
+/**
+ * Deletes a subscriber by calling the DELETE /api/subscribers/[id] endpoint.
+ * @param subscriberId The ID of the subscriber to delete.
+ */
+export async function deleteSubscriber(subscriberId: string): Promise<void> {
+  // Note the URL now includes the subscriberId
+  const res = await authedFetch(`/api/subscribers/${subscriberId}`, {
+    method: 'DELETE',
+  });
+
+  // A 204 No Content response is a success, but has no body to parse.
+  // We only need to check if the response was not okay.
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to delete subscriber');
+  }
+
+  // No need to return anything on success.
 }
 
 // 5. Update tenant provider settings

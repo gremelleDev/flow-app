@@ -131,38 +131,35 @@ We have successfully built a robust, secure, and well-architected foundation for
 
 * **Project Foundation**: We have a modern application built with React, TypeScript, and Vite, deployed on Cloudflare Pages. The backend is powered by serverless Cloudflare Functions with Cloudflare KV as the database.
 * **Secure End-to-End Feature**: The "Settings" page is fully functional. It allows for managing multiple email provider configurations, and all sensitive API keys are securely encrypted at rest before being saved.
-* **Robust User Authentication**: We have a complete authentication system using Firebase.
-    * Users can sign in via a dedicated login page (`LoginPage.tsx`).
-    * User sessions are persistent, meaning users stay logged in even after refreshing the page.
-* **Dynamic Role-Based Access Control (RBAC)**: We have a system for "super admin" users.
-    * We successfully refactored the backend to be edge-native, replacing the heavy `firebase-admin` SDK with a lightweight utility (`firebase-admin-api.ts`) for performance.
-    * We have a secure administrative endpoint (`/api/set-admin`) to assign a `superAdmin` role to any user.
-    * Our frontend (`App.tsx`) now dynamically reads this role from the user's token and updates the UI accordingly, removing all hardcoded admin flags.
-* **Secure Backend API Pattern**: We have established a reusable pattern for securing our backend.
-    * We created an authentication middleware (`auth-middleware.ts`) that verifies Firebase ID Tokens on incoming requests.
-    * We successfully applied this middleware to the `/api/settings` endpoint, making it truly multi-tenant and secure.
+* **Robust User Authentication**: We have a complete authentication system using Firebase, including persistent user sessions and a dedicated login page.
+* **Dynamic Role-Based Access Control (RBAC)**: We have a system for "super admin" users, with roles read dynamically from the user's token to control the UI.
+* **Secure Backend API Pattern**: We have established a reusable and scalable pattern for our APIs by separating routing logic from business logic handlers.
 * **Completed UI Polish**: We have implemented a full suite of UI and UX improvements, including a functional Logout button, a dynamic user menu, and a responsive, collapsible sidebar for mobile devices.
-* **Core Subscriber Management**: The first full-stack CRUD feature is complete and merged into `main`.
-* **API Architecture Refactor**: We have successfully refactored the Subscribers API to separate routing from business logic (`_handlers.ts`), creating a clean, scalable pattern for all future endpoints.
-* **URL-Based Routing**: We have integrated `react-router-dom` to provide persistent, bookmarkable URLs for each page in the application, fixing the "reset on refresh" issue.
+* **URL-Based Routing**: The application now uses `react-router-dom` for persistent, bookmarkable URLs, providing a more robust user experience.
+* **Core Subscriber Management**: The first full-stack CRUD feature for Subscribers is complete and merged into `main`.
+* **Core Campaign Management (CRUD)**: The foundational Create, Read, Update, and Delete functionality for Campaigns is complete.
+    * We built a secure, full-featured backend API at `/api/campaigns`.
+    * We implemented the `CampaignsPage` UI to display campaigns as cards and allow users to create, edit, and delete them using a reusable modal.
 
 ### What We're Currently Working On
-The implementation of URL-based routing is now functionally complete on the `feat/url-routing` branch. This branch is ready for final review and merging into `main`.
+The foundational CRUD functionality for the Campaigns feature is now complete on the `feat/campaigns-crud` branch. This branch is ready for final review and merging into `main`.
 
 ### Immediate Next Steps
-With all foundational and architectural improvements now complete, our next focus is to begin building the next core product feature.
+With the campaign container built, our next focus is to allow users to build the actual email sequences inside them.
 
-1.  **Merge Routing Branch**: We will merge the `feat/url-routing` branch into `main`. DONE
-2.  **Build Campaigns Feature**: Our next major task will be to build out the "Campaigns" feature. This will involve:
-    * Creating a new backend API (`/api/campaigns`) to handle CRUD operations for email campaigns.
-    * Building out the frontend UI on the `CampaignsPage.tsx` to allow users to create, view, update, and delete their email sequences.
+1.  **Merge Campaigns Branch**: We will merge the `feat/campaigns-crud` branch into `main` to lock in our progress.
+2.  **Build the Campaign Editor**: Our next major task is to build the UI for the campaign editor. This will be a new page or view where users can:
+    * Add individual email steps to a campaign.
+    * Define the subject line and content for each email.
+    * Set the sending delay for each step (e.g., "send 24 hours after the previous email").
 
 ### Big Milestones We're Aiming For
-After completing the Campaigns feature, we will continue building out the rest of the application's core functionality.
+After completing the Campaign Editor, we will continue building out the rest of the application's core functionality.
 
 * **Subscriber Segmentation**:
     * Design and implement a system for adding tags and lists to subscribers.
     * Update the UI to allow for managing tags and filtering the subscriber list.
+    * Connect campaigns to specific subscriber tags or lists.
 * **Email Sending Engine**: Develop the core backend logic (likely using Cloudflare Cron Triggers) that will handle the scheduling and sending of all emails based on campaign rules.
 * **Full Super Admin Functionality**: Build out the `TenantsPage` to allow a super admin to view and manage data for different tenants.
 * **Future User-Requested Features**:

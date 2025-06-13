@@ -12,7 +12,6 @@ export interface ProviderConfig {
   };
 }
 
-// AFTER (Use this new interface)
 export interface Subscriber {
   id: string;
   email: string;
@@ -26,7 +25,7 @@ export interface Campaign {
   name: string;
   fromName: string;
   fromEmail: string;
-  emails: Array<{ subject: string; body: string; delayInHours: number }>;
+  createdAt: string;
 }
 
 // --- NEW: Reusable Authenticated Fetch Helper ---
@@ -54,38 +53,70 @@ async function authedFetch(url: string, options: RequestInit = {}): Promise<Resp
 
 // --- STUBBED FUNCTIONS (no changes) ---
 
-// 1. Fetch all campaigns for a tenant (stub)
-export function getCampaigns(): Promise<Campaign[]> {
-  // This will also need to be updated to use authedFetch when implemented.
-  return Promise.resolve([
-    {
-      id: 'camp_1',
-      name: 'Demo Welcome Series',
-      fromName: 'Demo Sender',
-      fromEmail: 'demo@example.com',
-      emails: [
-        {
-          subject: 'Welcome!',
-          body: '<p>Hi there!</p>',
-          delayInHours: 0,
-        },
-      ],
-    },
-  ]);
+/**
+ * 1. Fetches all campaigns for the current tenant.
+ */
+export async function getCampaigns(): Promise<Campaign[]> {
+  const res = await authedFetch('/api/campaigns');
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to load campaigns');
+  }
+  return (await res.json()) as Campaign[];
 }
 
-// 2. Create a new campaign (stub)
-export function createCampaign(): Promise<{ success: boolean }> {
-  return Promise.resolve({ success: true });
+/**
+ * 2. Creates a new campaign.
+ * @param data The initial data for the new campaign.
+ */
+export async function createCampaign(data: { name: string; fromName: string; fromEmail: string }): Promise<Campaign> {
+  const res = await authedFetch('/api/campaigns', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to create campaign');
+  }
+  return (await res.json()) as Campaign;
 }
 
-// 3. Update a campaign by ID (stub)
-export function updateCampaign(
+/**
+ * Deletes a campaign by its ID.
+ * @param campaignId The ID of the campaign to delete.
+ */
+export async function deleteCampaign(campaignId: string): Promise<void> {
+  const res = await authedFetch(`/api/campaigns/${campaignId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to delete campaign');
+  }
+}
+
+/**
+ * 3. Updates an existing campaign by its ID.
+ * @param campaignId The ID of the campaign to update.
+ * @param data An object containing the fields to update.
+ */
+export async function updateCampaign(
   campaignId: string,
-  data: Partial<Campaign>
-): Promise<{ success:boolean }> {
-  console.log('updateCampaign stub called with:', campaignId, data);
-  return Promise.resolve({ success: true });
+  data: Partial<Omit<Campaign, 'id' | 'createdAt'>>
+): Promise<Campaign> {
+  const res = await authedFetch(`/api/campaigns/${campaignId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to update campaign');
+  }
+
+  return (await res.json()) as Campaign;
 }
 
 // 4. Fetch all subscribers for a tenant (stub)

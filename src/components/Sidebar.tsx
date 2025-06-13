@@ -2,14 +2,13 @@
 import {
   LayoutDashboard, Mail, Send, Users, Code2, BarChart2, Settings, X
 } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 // We define the type for the props our component will receive
 interface SidebarProps {
-  activePage: string;
-  setActivePage: (page: string) => void;
-  showTenants: boolean;    // ← Super Admin Only
-  isOpen: boolean; // <-- for mobile menu
-  setIsOpen: (isOpen: boolean) => void; // <-- for mobile menu
+  showTenants: boolean;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
 const navItems = [
@@ -22,7 +21,7 @@ const navItems = [
   
 ];
 
-export const Sidebar = ({ activePage, setActivePage, showTenants, isOpen, setIsOpen }: SidebarProps) => {
+export const Sidebar = ({ showTenants, isOpen, setIsOpen  }: SidebarProps) => {
   return (
     <>
        {/* --- NEW: Mobile Overlay --- */}
@@ -47,62 +46,58 @@ export const Sidebar = ({ activePage, setActivePage, showTenants, isOpen, setIsO
           <h1 className="text-2xl font-bold text-white tracking-wider">FunnelFlow.</h1>
         </div>
 
-        <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
-          {navItems.map(item => {
-            const Icon = item.icon;
-            const isActive = activePage === item.id;
-            return (
-              <a
-                key={item.id}
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActivePage(item.id);
-                  setIsOpen(false); // <-- close mob menu on click
-                }}
-                className={`flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
-                  isActive ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-700 hover:text-white'
-                }`}
-              >
-                <Icon className="h-6 w-6 mr-3" />
-                {item.label}
-              </a>
-            );
-          })}
+        
+          <nav className="flex-1 px-2 py-4 space-y-2 overflow-y-auto">
+            {navItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.id}
+                  to={`/${item.id}`} // The URL this link points to
+                  onClick={() => setIsOpen(false)} // Close menu on click
+                  // NavLink passes an `isActive` boolean that we use to apply styles
+                  className={({ isActive }) =>
+                    `flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
+                      isActive ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-700 hover:text-white'
+                    }`
+                  }
+                >
+                  <Icon className="h-6 w-6 mr-3" />
+                  {item.label}
+                </NavLink>
+              );
+            })}
 
-          {showTenants && (
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setActivePage('tenants');
-                setIsOpen(false); // <-- Add this line
-              }}
-              className={`flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
-                activePage === 'tenants' ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-700 hover:text-white'
-              }`}
-            >
-              <Users className="h-6 w-6 mr-3" />
-              Tenants
-            </a>
-          )}
-        </nav>
+            {/* We do the same for the conditional "Tenants" link */}
+            {showTenants && (
+              <NavLink
+                to="/tenants"
+                onClick={() => setIsOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
+                    isActive ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-700 hover:text-white'
+                  }`
+                }
+              >
+                <Users className="h-6 w-6 mr-3" />
+                Tenants
+              </NavLink>
+            )}
+          </nav>
 
         <div className="px-2 py-4 flex-shrink-0">
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              setActivePage('settings');
-              setIsOpen(false); // <-- Add this line
-            }}
-            className={`flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
-              activePage === 'settings' ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-700 hover:text-white'
-            }`}
-          >
-            <Settings className="h-6 w-6 mr-3" />
-            Settings
-          </a>
+          <NavLink
+              to="/settings"
+              onClick={() => setIsOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center px-4 py-2 rounded-md transition-colors duration-200 ${
+                  isActive ? 'bg-indigo-600 text-white' : 'hover:bg-indigo-700 hover:text-white'
+                }`
+              }
+            >
+              <Settings className="h-6 w-6 mr-3" />
+              Settings
+          </NavLink>
         </div>
       </aside>
     </>

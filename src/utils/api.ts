@@ -26,6 +26,12 @@ export interface Campaign {
   fromName: string;
   fromEmail: string;
   createdAt: string;
+  emails: Array<{
+    id: string;
+    subject: string;
+    body: string;
+    delayInHours: number;
+  }>;
 }
 
 // --- NEW: Reusable Authenticated Fetch Helper ---

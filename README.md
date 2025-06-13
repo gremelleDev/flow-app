@@ -129,7 +129,7 @@ As a best practice, we will include a `schemaVersion` number inside the JSON obj
 ### What We've Accomplished So Far
 We have successfully built a robust, secure, and well-architected foundation for the application. The groundwork for all future features is now complete.
 
-* **Project Foundation**: We have a modern application built with React, TypeScript, and Vite, deployed on Cloudflare Pages. The backend is powered by serverless Cloudflare Functions with Cloudflare KV as the database.
+* **Project Foundation**: We have a modern application built with React, TypeScript, and Vite, deployed on Cloudflare Pages. The backend is powered by serverless Cloudflare Functions with Cloudflare KV for the database.
 * **Secure End-to-End Feature**: The "Settings" page is fully functional. It allows for managing multiple email provider configurations, and all sensitive API keys are securely encrypted at rest before being saved.
 * **Robust User Authentication**: We have a complete authentication system using Firebase, including persistent user sessions and a dedicated login page.
 * **Dynamic Role-Based Access Control (RBAC)**: We have a system for "super admin" users, with roles read dynamically from the user's token to control the UI.
@@ -139,19 +139,23 @@ We have successfully built a robust, secure, and well-architected foundation for
 * **Core Subscriber Management**: The first full-stack CRUD feature for Subscribers is complete and merged into `main`.
 * **Core Campaign Management (CRUD)**: The foundational Create, Read, Update, and Delete functionality for Campaigns is complete.
     * We built a secure, full-featured backend API at `/api/campaigns`.
-    * We implemented the `CampaignsPage` UI to display campaigns as cards and allow users to create, edit, and delete them using a reusable modal.
+    * We implemented the `CampaignsPage` UI to display campaigns as cards and allow users to create them using a reusable modal.
+* **NEW — Campaign Editor Foundation**: Built the foundation for the Campaign Editor page, including the backend data model updates, routing, and a fully interactive UI for adding, deleting, and editing email steps within local component state. We've also hardened the UI with mobile-responsive layouts and safeguards like sequence limits.
 
 ### What We're Currently Working On
-The foundational CRUD functionality for the Campaigns feature is now complete on the `feat/campaigns-crud` branch. This branch is ready for final review and merging into `main`.
+We are actively building the `feat/campaign-editor` branch. The UI for the **local state management** of the email sequence is now functionally complete. Users can currently add, delete, select, and edit email steps, and all changes are reflected instantly and reliably in the UI. All of this work is happening in local component state and is not yet persisted to the backend.
 
 ### Immediate Next Steps
-With the campaign container built, our next focus is to allow users to build the actual email sequences inside them.
+Our immediate goal is to complete the `feat/campaign-editor` feature. The final piece of this puzzle is to persist the user's changes to the backend.
 
-1.  **Merge Campaigns Branch**: We will merge the `feat/campaigns-crud` branch into `main` to lock in our progress.
-2.  **Build the Campaign Editor**: Our next major task is to build the UI for the campaign editor. This will be a new page or view where users can:
-    * Add individual email steps to a campaign.
-    * Define the subject line and content for each email.
-    * Set the sending delay for each step (e.g., "send 24 hours after the previous email").
+1.  **Add a "Save Campaign" Button**: We will add a "Save" button to the `CampaignEditorPage`. This button should be disabled by default and only become enabled when there are unsaved changes.
+2.  **Implement the Save Logic**: Clicking the "Save" button will call our existing `updateCampaign` API function, sending the entire campaign object with the updated `emails` array to be stored in Cloudflare KV.
+3.  **Refactor the Campaign Editor**:
+    *   **Goal:** The `CampaignEditorPage.tsx` component is becoming large. Once the feature is functionally complete, we will immediately refactor it to improve maintainability.
+    *   **Plan:**
+        1. Create a new `EmailSequenceList.tsx` component for the left column.
+        2. Create a new `EmailEditorForm.tsx` component for the right column.
+        3. The parent `CampaignEditorPage.tsx` will become a cleaner "container" component, responsible only for state management and data fetching.
 
 ### Big Milestones We're Aiming For
 After completing the Campaign Editor, we will continue building out the rest of the application's core functionality.
@@ -162,6 +166,13 @@ After completing the Campaign Editor, we will continue building out the rest of 
     * Connect campaigns to specific subscriber tags or lists.
 * **Email Sending Engine**: Develop the core backend logic (likely using Cloudflare Cron Triggers) that will handle the scheduling and sending of all emails based on campaign rules.
 * **Full Super Admin Functionality**: Build out the `TenantsPage` to allow a super admin to view and manage data for different tenants.
+* **UI/UX Polish: Reusable Confirmation Modal**:
+    * **Goal:** Replace all native `window.confirm()` dialogs with a consistent, reusable, and branded confirmation modal to improve the user experience for destructive actions.
+    * **Plan:**
+        1. Design and build a generic `ConfirmationModal.tsx` component that accepts props like `title`, `message`, and an `onConfirm` callback function.
+        2. Refactor the `handleDeleteCampaign` function in `CampaignsPage.tsx` to use this new modal.
+        3. Refactor the `handleDeleteSubscriber` function in `SubscribersPage.tsx` to use this new modal.
+        4. Ensure this modal is used for all future destructive actions in the application.
 * **Future User-Requested Features**:
     * Build a dedicated Sign-up Page to collect a user's full name.
     * Build an Account Settings/Billing Page.

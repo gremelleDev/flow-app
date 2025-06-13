@@ -1,6 +1,7 @@
 // File: src/pages/CampaignsPage.tsx
 
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getCampaigns, createCampaign, deleteCampaign, updateCampaign, type Campaign } from '../utils/api';
 import { Edit, Trash2, Send, X } from 'lucide-react';
 
@@ -81,11 +82,13 @@ const openCreateModal = () => {
   setIsModalOpen(true);
 };
 
+/*
 const openEditModal = (campaign: Campaign) => {
   setEditingCampaignId(campaign.id);
   setFormState({ name: campaign.name, fromName: campaign.fromName, fromEmail: campaign.fromEmail });
   setIsModalOpen(true);
 };
+*/
 
 const closeModal = () => {
   setIsModalOpen(false);
@@ -163,12 +166,12 @@ const handleDeleteCampaign = async (campaignId: string, campaignName: string) =>
                       aria-label="Delete campaign">
                        <Trash2 size={18} />
                     </button>
-                    <button 
-                      onClick={() => openEditModal(campaign)}
+                    <Link 
+                      to={`/campaigns/${campaign.id}/edit`}
                       className="p-2 text-gray-400 hover:text-indigo-600" 
                       aria-label="Edit campaign">
                       <Edit size={18} />
-                    </button>
+                    </Link>
                   </div>
                 </div>
               ))}

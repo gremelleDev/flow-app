@@ -69,7 +69,7 @@ graph TD
     subgraph "Google Cloud"
         F
     end
-
+```
 ---
 
 ### Core Technologies & Principles

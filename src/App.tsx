@@ -10,6 +10,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Import all our page components
 import { DashboardPage } from './pages/DashboardPage';
 import { CampaignsPage } from './pages/CampaignsPage';
+import { CampaignEditorPage } from './pages/CampaignEditorPage';
 import { BroadcastsPage } from './pages/BroadcastsPage';
 import { SubscribersPage } from './pages/SubscribersPage';
 import { FormsPage } from './pages/FormsPage';
@@ -104,6 +105,7 @@ function App() {
                   <Routes>
                     <Route path="/dashboard" element={<DashboardPage />} />
                     <Route path="/campaigns" element={<CampaignsPage />} />
+                    <Route path="/campaigns/:campaignId/edit" element={<CampaignEditorPage />} />
                     <Route path="/broadcasts" element={<BroadcastsPage />} />
                     <Route path="/subscribers" element={<SubscribersPage />} />
                     <Route path="/forms" element={<FormsPage />} />

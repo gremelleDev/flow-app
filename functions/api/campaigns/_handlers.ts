@@ -11,6 +11,12 @@ export interface Campaign {
   fromName: string;
   fromEmail: string;
   createdAt: string;
+  emails: Array<{
+    id: string;
+    subject: string;
+    body: string; // We'll store email content as a string for now
+    delayInHours: number;
+  }>;
 }
 
 // Re-usable Env interface for our campaign functions
@@ -21,54 +27,74 @@ export interface Env {
 }
 
 /**
- * Handles GET requests to /api/campaigns.
- * Fetches all campaigns for the authenticated tenant.
+ * Handles GET requests.
+ * If an ID is present in the URL (/api/campaigns/[id]), it fetches a single campaign.
+ * Otherwise (/api/campaigns), it fetches all campaigns for the tenant.
  */
 export async function handleGet(context: EventContext<Env, any, Record<string, unknown>>) {
-    try {
-      // 1. Authenticate the request to get the tenantId
-      const decodedToken = await authenticate(context);
-      const tenantId = decodedToken.tenantId as string;
-      if (!tenantId) {
-        return new Response('No tenantId found in user token.', { status: 400 });
+  try {
+    // 1. Authenticate the request to get the tenantId
+    const decodedToken = await authenticate(context);
+    const tenantId = decodedToken.tenantId as string;
+    if (!tenantId) {
+      return new Response('No tenantId found in user token.', { status: 400 });
+    }
+
+    const { env, params } = context;
+    const campaignId = params.id as string;
+
+    // --- NEW: Logic to fetch a SINGLE campaign if an ID is provided ---
+    if (campaignId) {
+      const key = `tenant::${tenantId}::campaign::${campaignId}`;
+      const campaignJson = await env.FLOW_KV.get(key);
+
+      if (!campaignJson) {
+        return new Response('Campaign not found.', { status: 404 });
       }
-  
-      const { env } = context;
-      // 2. Define the key prefix for this tenant's campaigns
-      const prefix = `tenant::${tenantId}::campaign::`;
-  
-      // 3. List all keys in KV that match the prefix
-      const list = await env.FLOW_KV.list({ prefix });
-  
-      if (list.keys.length === 0) {
-        return new Response(JSON.stringify([]), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        });
-      }
-      
-      // 4. Fetch the full value for each campaign key
-      const promises = list.keys.map(key => env.FLOW_KV.get(key.name));
-      const values = await Promise.all(promises);
-  
-      // 5. Parse the campaign objects and filter out any potential nulls
-      const campaigns = values
-        .filter(value => value !== null)
-        .map(value => JSON.parse(value!));
-  
-      return new Response(JSON.stringify(campaigns), {
+
+      return new Response(campaignJson, {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
       });
-  
-    } catch (error: any) {
-      if (error.message.includes('token')) {
-        return new Response(error.message, { status: 401, statusText: 'Unauthorized' });
-      }
-      console.error("Error fetching campaigns:", error);
-      return new Response('An internal server error occurred.', { status: 500 });
     }
+
+    // --- Existing logic to fetch ALL campaigns ---
+
+    // 2. Define the key prefix for this tenant's campaigns
+    const prefix = `tenant::${tenantId}::campaign::`;
+
+    // 3. List all keys in KV that match the prefix
+    const list = await env.FLOW_KV.list({ prefix });
+
+    if (list.keys.length === 0) {
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // 4. Fetch the full value for each campaign key
+    const promises = list.keys.map(key => env.FLOW_KV.get(key.name));
+    const values = await Promise.all(promises);
+
+    // 5. Parse the campaign objects and filter out any potential nulls
+    const campaigns = values
+      .filter(value => value !== null)
+      .map(value => JSON.parse(value!));
+
+    return new Response(JSON.stringify(campaigns), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  } catch (error: any) {
+    if (error.message.includes('token')) {
+      return new Response(error.message, { status: 401, statusText: 'Unauthorized' });
+    }
+    console.error("Error fetching campaigns:", error);
+    return new Response('An internal server error occurred.', { status: 500 });
   }
+}
 
 /**
  * Handles POST requests to /api/campaigns.
@@ -99,6 +125,7 @@ export async function handlePost(context: EventContext<Env, any, Record<string, 
         fromName,
         fromEmail,
         createdAt: new Date().toISOString(),
+        emails: [],
       };
       
       // 5. Construct the unique key and save to Cloudflare KV

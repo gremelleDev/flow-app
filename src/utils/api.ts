@@ -66,6 +66,21 @@ export async function getCampaigns(): Promise<Campaign[]> {
 }
 
 /**
+ * Fetches a single campaign by its ID.
+ * @param campaignId The ID of the campaign to fetch.
+ */
+export async function getCampaign(campaignId: string): Promise<Campaign> {
+  const res = await authedFetch(`/api/campaigns/${campaignId}`);
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to load campaign');
+  }
+  
+  return (await res.json()) as Campaign;
+}
+
+/**
  * 2. Creates a new campaign.
  * @param data The initial data for the new campaign.
  */
@@ -132,6 +147,7 @@ export async function getSubscribers(): Promise<Subscriber[]> {
   return (await res.json()) as Subscriber[];
 }
 
+
 /**
  * Creates a new subscriber by calling the POST /api/subscribers endpoint.
  * @param data An object containing the new subscriber's email and fullName.
@@ -153,6 +169,7 @@ export async function createSubscriber(data: { email: string, fullName?: string 
 
   return (await res.json()) as Subscriber;
 }
+
 
 // Add this new function to src/utils/api.ts
 

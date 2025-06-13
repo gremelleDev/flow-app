@@ -132,44 +132,38 @@ We have successfully built a robust, secure, and well-architected foundation for
 * **Project Foundation**: We have a modern application built with React, TypeScript, and Vite, deployed on Cloudflare Pages. The backend is powered by serverless Cloudflare Functions with Cloudflare KV as the database.
 * **Secure End-to-End Feature**: The "Settings" page is fully functional. It allows for managing multiple email provider configurations, and all sensitive API keys are securely encrypted at rest before being saved.
 * **Robust User Authentication**: We have a complete authentication system using Firebase.
-    * Users can sign in via a dedicated login page (`LoginPage.tsx`).
-    * User sessions are persistent, meaning users stay logged in even after refreshing the page.
+    * Users can sign in via a dedicated login page (`LoginPage.tsx`).
+    * User sessions are persistent, meaning users stay logged in even after refreshing the page.
 * **Dynamic Role-Based Access Control (RBAC)**: We have a system for "super admin" users.
-    * We successfully refactored the backend to be edge-native, replacing the heavy `firebase-admin` SDK with a lightweight utility (`firebase-admin-api.ts`) for performance.
-    * We have a secure administrative endpoint (`/api/set-admin`) to assign a `superAdmin` role to any user.
-    * Our frontend (`App.tsx`) now dynamically reads this role from the user's token and updates the UI accordingly, removing all hardcoded admin flags.
+    * We successfully refactored the backend to be edge-native, replacing the heavy `firebase-admin` SDK with a lightweight utility (`firebase-admin-api.ts`) for performance.
+    * We have a secure administrative endpoint (`/api/set-admin`) to assign a `superAdmin` role to any user.
+    * Our frontend (`App.tsx`) now dynamically reads this role from the user's token and updates the UI accordingly, removing all hardcoded admin flags.
 * **Secure Backend API Pattern**: We have established a reusable pattern for securing our backend.
-    * We created an authentication middleware (`auth-middleware.ts`) that verifies Firebase ID Tokens on incoming requests.
-    * We successfully applied this middleware to the `/api/settings` endpoint, removing the hardcoded `tenantId` and making it truly multi-tenant and secure.
-* **Completed UI Polish**: We have implemented a full suite of UI and UX improvements.
-    * A functional Logout button and user menu have been added to the `TopBar`.
-    * The user profile icon now dynamically displays the user's initials.
-    * The sidebar is now fully responsive, collapsing into a slide-out menu on mobile devices.
-* **Core Subscriber Management**: The first full-stack CRUD feature is complete.
-    * We created a secure and dynamic API at `/api/subscribers` with `GET`, `POST`, and `DELETE` handlers.
-    * We connected the `SubscribersPage` to the live backend, replacing all stubbed data.
-    * Users can now view, add, and delete subscribers for their tenant, with all changes reflected in the UI instantly.
+    * We created an authentication middleware (`auth-middleware.ts`) that verifies Firebase ID Tokens on incoming requests.
+    * We successfully applied this middleware to the `/api/settings` endpoint, making it truly multi-tenant and secure.
+* **Completed UI Polish**: We have implemented a full suite of UI and UX improvements, including a functional Logout button, a dynamic user menu, and a responsive, collapsible sidebar for mobile devices.
+* **Core Subscriber Management**: The first full-stack CRUD feature is complete and merged into `main`.
+* **API Architecture Refactor**: We have successfully refactored the Subscribers API to separate routing from business logic (`_handlers.ts`), creating a clean, scalable pattern for all future endpoints.
 
 ### What We're Currently Working On
-The initial implementation of the core Subscribers feature is now functionally complete on the `feat/subscribers-api` branch. This branch is stable and ready for final review and merging into `main`.
+The Subscribers API refactor is complete on the `chore/refactor-subscribers-api` branch. This branch is now ready for final review and merging into `main`.
 
 ### Immediate Next Steps
-With the subscribers feature complete, our immediate focus is to merge our progress and make key architectural improvements before starting the next product feature.
+With the API refactor complete, our next focus is to merge this architectural improvement and then move on to enhancing the frontend's navigation logic.
 
-1.  **Merge Feature Branch**: We will merge the `feat/subscribers-api` branch into `main` to lock in our progress and keep the main branch up-to-date.
-2.  **Refactor Subscribers API**: As a code quality task, we will refactor the `functions/api/subscribers/[[id]].ts` file to separate routing logic from business logic, setting a clean pattern for future API endpoints.
-3.  **Implement URL-Based Routing**: We will integrate the `react-router-dom` library to make application pages bookmarkable and solve the "redirect on refresh" issue, creating a more robust user experience.
+1.  **Merge Refactor Branch**: We will merge the `chore/refactor-subscribers-api` branch into `main` to ensure our primary codebase reflects the new, cleaner API pattern.
+2.  **Implement URL-Based Routing**: We will integrate the `react-router-dom` library to make application pages bookmarkable and solve the "redirect on refresh" issue, creating a more robust user experience.
 
 ### Big Milestones We're Aiming For
 After completing the immediate architectural improvements, we will continue building out the rest of the application's core functionality.
 
 * **Core MVP Features (Completion)**: Build out the Campaigns feature (UI and backend).
-    * Implement the Public Subscribe Endpoint for tenant websites.
+    * Implement the Public Subscribe Endpoint for tenant websites.
 * **Subscriber Segmentation**:
-    * Design and implement a system for adding tags and lists to subscribers.
-    * Update the UI to allow for managing tags and filtering the subscriber list.
+    * Design and implement a system for adding tags and lists to subscribers.
+    * Update the UI to allow for managing tags and filtering the subscriber list.
 * **Email Sending Engine**: Develop the core backend logic (likely using Cloudflare Cron Triggers) that will handle the scheduling and sending of all emails based on campaign rules.
 * **Full Super Admin Functionality**: Build out the `TenantsPage` to allow a super admin to view and manage data for different tenants.
 * **Future User-Requested Features**:
-    * Build a dedicated Sign-up Page to collect a user's full name.
-    * Build an Account Settings/Billing Page.
+    * Build a dedicated Sign-up Page to collect a user's full name.
+    * Build an Account Settings/Billing Page.

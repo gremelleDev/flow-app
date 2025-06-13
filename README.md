@@ -6,6 +6,98 @@ The core goal of this project is to offer a flexible and secure email marketing 
 
 Architecturally, FunnelFlow is built on a modern, high-performance, serverless-first stack. The frontend is a responsive React application (built with Vite and TypeScript), and the backend is powered by Cloudflare's edge network, utilizing Cloudflare Functions for API endpoints and Cloudflare KV for data storage. Security and scalability are paramount, with a robust authentication system built on Firebase and a secure API layer that uses JWTs and role-based access control to manage user and tenant data.
 
+---
+
+### Getting Started: Running Locally
+
+To run this project on your local machine, follow these steps.
+
+**1. Prerequisites:**
+* Node.js (v20 or later)
+* npm (or your preferred package manager)
+
+**2. Installation:**
+Clone the repository and install the required dependencies.
+
+git clone [https://github.com/gremelleDev/flow-app.git](https://github.com/gremelleDev/flow-app.git)
+cd flow-app
+npm install
+
+--- 
+
+### Our Technology & Philosophy
+
+This project is built on a specific set of modern technologies and principles. Our core philosophy is to prioritize **developer experience, user-facing performance, security, and scalability** by leveraging a serverless-first, edge-native architecture. This document explains the "what" and the "why" behind our stack, serving as a guide for all current and future development.
+
+**Our Guiding Principles:**
+* **Edge-Native**: We build and deploy on platforms that run code as close to the user as possible. This minimizes latency and improves responsiveness.
+* **Serverless First**: We avoid managing traditional server infrastructure wherever possible. This reduces operational overhead and allows us to focus on building features, with automatic scaling handled by the platform.
+* **End-to-End Type Safety**: We use TypeScript across the entire stack. This creates a strong contract between the frontend and backend, catches bugs at compile time, and makes the codebase more maintainable and self-documenting.
+
+---
+
+### Stack-at-a-Glance
+
+| Category | Technology | Reason |
+| :--- | :--- | :--- |
+| **Frontend** | React, Vite, TypeScript | Modern, type-safe, component-based UI with a fast dev experience. |
+| **Platform** | Cloudflare Pages & Functions| Globally fast, serverless, and scalable with integrated CI/CD. |
+| **Database**| Cloudflare KV | Extremely fast edge storage for configuration and user data. |
+| **Auth**| Firebase Authentication | Robust, secure, and managed identity service. |
+
+---
+
+### Architecture Diagram
+
+This diagram illustrates how the components of our stack interact.
+
+mermaid
+graph TD
+    A[User's Browser] --> B{Cloudflare Pages};
+    B --> C[React App];
+    C --> D[Cloudflare Functions API];
+    D --> E[Cloudflare KV];
+    D --> F[Firebase Auth];
+    subgraph "Cloudflare Edge Network"
+        B
+        D
+        E
+    end
+    subgraph "Google Cloud"
+        F
+    end
+
+---
+
+### Core Technologies & Principles
+
+#### Core Framework: React + Vite + TypeScript
+* **Our Philosophy**: We use **React** for its robust component-based architecture, which allows us to build a complex, maintainable user interface. **Vite** provides an exceptionally fast and modern development experience with near-instant hot module replacement (HMR). **TypeScript** is non-negotiable; it ensures type safety from the database schema all the way to the UI components, drastically reducing runtime errors and improving collaboration.
+> **Developer Takeaway**: Build small, reusable components. Fully type all props and state. Leverage TypeScript's power to ensure data contracts between components are strong.
+
+#### Platform & Deployment: Cloudflare Pages
+* **Our Philosophy**: Cloudflare Pages offers best-in-class performance by distributing our frontend globally on its edge network. Its direct integration with GitHub provides a seamless CI/CD pipeline, which powers the **Preview Deployments** mentioned in our `Development Workflow`. Every pull request gets its own live, testable environment automatically, which is invaluable for quality assurance.
+> **Developer Takeaway**: Always check the preview deployment URL in a pull request before merging. Trust the integrated CI/CD process to handle builds and deployments.
+
+#### Backend: Serverless Cloudflare Functions
+* **Our Philosophy**: By writing our backend as a collection of serverless functions, we adhere to our "Serverless First" principle. These functions are lightweight, automatically scale with demand, and have extremely low latency to our frontend since they are deployed on the same edge network. We favor lean, focused functions and avoid heavy dependencies, as demonstrated by our custom, lightweight `firebase-admin-api.ts` utility.
+> **Developer Takeaway**: When creating a new endpoint, keep the function's responsibility small and focused. Optimize for fast cold starts by minimizing dependencies.
+
+#### Database: Cloudflare KV
+* **Our Philosophy**: We chose KV for its unparalleled read performance, making it ideal for storing user- and tenant-specific configuration and data that needs to be accessed quickly from our edge functions. It is important to recognize that **KV is not a traditional relational database**. This architectural choice influences our `Data & Schema Migration Strategy`. We do not have access to complex queries or joins, so we must design our data structures around the specific access patterns we need.
+> **Developer Takeaway**: Think about your data access patterns *before* writing to KV. Structure your keys with prefixes (e.g., `tenantId::subscriber::{subscriberId}`) to enable efficient listing and retrieval. Never attempt complex joins or queries.
+
+#### Authentication: Firebase Authentication
+* **Our Philosophy**: Authentication is a critical, complex, and solved problem. We leverage a managed service like **Firebase Auth** to handle user sign-up, sign-in, and password management securely, allowing us to focus on our application's core business logic. We use JWTs (JSON Web Tokens) issued by Firebase, and we enrich these tokens with **custom claims** (e.g., `tenantId`, `superAdmin`) to enable stateless, secure, and multi-tenant authorization in our backend API functions.
+> **Developer Takeaway**: Our backend functions are secured by the `authenticate` middleware. All protected frontend API calls must use the `authedFetch` helper, which automatically attaches the user's JWT.
+
+### Environment Variable Management
+* **Our Philosophy**: A consistent and clear environment variable strategy is crucial to prevent bugs between local and deployed environments.
+> **Developer Takeaway**: Our project uses two types of environment variables, distinguished by a prefix:
+> * `VITE_...`: Variables prefixed with `VITE_` are for the **frontend**. They are embedded into the React application at build time and are safe to be public (e.g., Firebase public config).
+> * No Prefix: Variables without a prefix are for our **backend** Cloudflare Functions (e.g., `MASTER_ENCRYPTION_KEY`, `FIREBASE_SERVICE_ACCOUNT`). These are always treated as secrets.
+>
+> In Cloudflare Pages, all variables must be configured for **both the Production and Preview environments** to ensure preview deployments function correctly.
 
 ---
 ## Development Workflow
@@ -82,7 +174,7 @@ After completing the immediate architectural improvements, we will continue buil
     * Build a dedicated Sign-up Page to collect a user's full name.
     * Build an Account Settings/Billing Page.
 
----
+---h
 
 # React + TypeScript + Vite
 

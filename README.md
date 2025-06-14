@@ -1,6 +1,6 @@
-# FunnelFlow Project
+# FunelFlo Project
 
-FunnelFlow is a powerful, multi-tenant SaaS platform designed to simplify email marketing automation. It provides users with the tools to create and manage sophisticated email autoresponder campaigns, handle subscriber lists, and integrate with their preferred email sending services.
+FunelFlo is a powerful, multi-tenant SaaS platform designed to simplify email marketing automation. It provides users with the tools to create and manage sophisticated email autoresponder campaigns, handle subscriber lists, and integrate with their preferred email sending services.
 
 The core goal of this project is to offer a flexible and secure email marketing solution for businesses and creators. Each user or organization operates within their own isolated tenant account, ensuring data privacy. A key feature is the ability for users to securely connect their own email providers (e.g., Resend, Brevo) via encrypted API keys, giving them full control over their sending infrastructure and reputation.
 
@@ -140,30 +140,34 @@ We have successfully built a robust, secure, and well-architected foundation for
 * **Core Campaign Management (CRUD)**: The foundational Create, Read, Update, and Delete functionality for Campaigns is complete.
     * We built a secure, full-featured backend API at `/api/campaigns`.
     * We implemented the `CampaignsPage` UI to display campaigns as cards and allow users to create them using a reusable modal.
-* **NEW — Campaign Editor Foundation**: Built the foundation for the Campaign Editor page, including the backend data model updates, routing, and a fully interactive UI for adding, deleting, and editing email steps within local component state. We've also hardened the UI with mobile-responsive layouts and safeguards like sequence limits.
+* **Campaign Editor MVP Complete**: Built a complete, end-to-end feature for editing campaign email sequences. This includes a fully interactive UI for adding, deleting, and editing email steps, and the ability to persist all changes to the backend with a "Save" button. The UI has also been hardened with responsive layouts and safeguards like sequence limits.
 
 ### What We're Currently Working On
-We are actively building the `feat/campaign-editor` branch. The UI for the **local state management** of the email sequence is now functionally complete. Users can currently add, delete, select, and edit email steps, and all changes are reflected instantly and reliably in the UI. All of this work is happening in local component state and is not yet persisted to the backend.
+The `feat/campaign-editor` branch is now **feature-complete**. All local state management and backend persistence for the Campaign Editor are working correctly. The final step before this feature can be merged is to improve the code's long-term health.
 
 ### Immediate Next Steps
-Our immediate goal is to complete the `feat/campaign-editor` feature. The final piece of this puzzle is to persist the user's changes to the backend.
+With the Campaign Editor now functionally complete, our immediate and final task for this feature is to refactor the main component to improve maintainability.
 
-1.  **Add a "Save Campaign" Button**: We will add a "Save" button to the `CampaignEditorPage`. This button should be disabled by default and only become enabled when there are unsaved changes.
-2.  **Implement the Save Logic**: Clicking the "Save" button will call our existing `updateCampaign` API function, sending the entire campaign object with the updated `emails` array to be stored in Cloudflare KV.
-3.  **Refactor the Campaign Editor**:
-    *   **Goal:** The `CampaignEditorPage.tsx` component is becoming large. Once the feature is functionally complete, we will immediately refactor it to improve maintainability.
+1.  **Refactor the Campaign Editor**:
+    *   **Goal:** The `CampaignEditorPage.tsx` component is large and responsible for too many things. We will refactor it before merging to ensure the codebase remains clean and easy to build upon.
     *   **Plan:**
         1. Create a new `EmailSequenceList.tsx` component for the left column.
         2. Create a new `EmailEditorForm.tsx` component for the right column.
         3. The parent `CampaignEditorPage.tsx` will become a cleaner "container" component, responsible only for state management and data fetching.
+2.  **Merge the `feat/campaign-editor` Branch**: Once the refactor is complete and verified, we will merge this feature into `main`.
 
 ### Big Milestones We're Aiming For
-After completing the Campaign Editor, we will continue building out the rest of the application's core functionality.
+After completing and refactoring the Campaign Editor, we will continue building out the rest of the application's core functionality.
 
 * **Subscriber Segmentation**:
     * Design and implement a system for adding tags and lists to subscribers.
     * Update the UI to allow for managing tags and filtering the subscriber list.
     * Connect campaigns to specific subscriber tags or lists.
+* **UX: "Unsaved Changes" Warning**:
+    * **Goal:** Prevent users from accidentally losing work by navigating away from an editor with unsaved changes.
+    * **Plan:**
+        1. Implement a custom hook (`useUnsavedChangesWarning`) that uses the browser's `beforeunload` event.
+        2. Integrate this hook into the `CampaignEditorPage` to show a native browser confirmation dialog if `hasUnsavedChanges` is true.
 * **Email Sending Engine**: Develop the core backend logic (likely using Cloudflare Cron Triggers) that will handle the scheduling and sending of all emails based on campaign rules.
 * **Full Super Admin Functionality**: Build out the `TenantsPage` to allow a super admin to view and manage data for different tenants.
 * **UI/UX Polish: Reusable Confirmation Modal**:

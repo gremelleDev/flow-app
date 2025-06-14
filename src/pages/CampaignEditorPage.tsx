@@ -23,6 +23,8 @@ export const CampaignEditorPage = () => {
   const [selectedEmailId, setSelectedEmailId] = useState<string | null>(null);
   // This will store a snapshot of the campaign data as it was on page load
   const [initialCampaign, setInitialCampaign] = useState<Campaign | null>(null);
+  // Add this line with your other useState hooks
+  const [isDetailsCollapsed, setIsDetailsCollapsed] = useState(true);
   // Standard loading and error states
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -148,6 +150,18 @@ export const CampaignEditorPage = () => {
     }
   };
 
+  // Add this new function inside the CampaignEditorPage component
+
+  const handleCampaignDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!campaign) return;
+
+    const { name, value } = e.target;
+    setCampaign({
+      ...campaign,
+      [name]: value,
+    });
+  };
+
   // Find the full email object that corresponds to the selectedEmailId
   const selectedEmail = campaign?.emails.find(e => e.id === selectedEmailId);
     // Compare the current campaign state with the initial state to detect changes
@@ -176,53 +190,104 @@ export const CampaignEditorPage = () => {
   // Main Editor Layout
   return (
     <div>
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex justify-between items-start">
-          <div>
-            <Link to="/campaigns" className="text-sm text-gray-500 hover:text-indigo-600 flex items-center mb-2">
-              <ArrowLeft size={16} className="mr-1" />
-              Back to Campaigns
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-800">{campaign.name}</h1>
-            <p className="text-gray-500">Editing email sequence</p>
-          </div>
-          
-          {/* --- The Campaign Editor Save Button --- */}
-          <button
-            onClick={handleSaveChanges}
-            disabled={!hasUnsavedChanges || isSaving} // <-- Now also disabled while saving
-            className="px-5 py-2 text-center bg-indigo-600 text-white rounded-lg font-semibold shadow-md 
-                       hover:bg-indigo-700 transition-all focus:outline-none focus:ring-2 
-                       focus:ring-indigo-500 focus:ring-offset-2
-                       disabled:bg-gray-300 disabled:cursor-not-allowed"
-          >
-            {isSaving ? 'Saving...' : 'Save Changes'} {/* <-- Text changes based on state */}
-          </button>
-        </div>
-      </div>
-      
-      {/* Two-column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:items-start">
-        {/* Left Column: Render our new EmailSequenceList component */}
-          <EmailSequenceList
-              emails={campaign.emails}
-              selectedEmailId={selectedEmailId}
-              isSequenceCollapsed={isSequenceCollapsed}
-              onAddNewEmail={handleAddNewEmail}
-              onDeleteEmail={handleDeleteEmail}
-              onSelectEmail={setSelectedEmailId}
-              setIsSequenceCollapsed={setIsSequenceCollapsed}
-          />
+    {/* --- HEADER --- */}
+    <div className="flex justify-between items-center mb-6">
+      <Link to="/campaigns" className="text-sm text-gray-500 hover:text-indigo-600 flex items-center">
+        <ArrowLeft size={16} className="mr-1" />
+        Back to Campaigns
+      </Link>
+      <button
+        onClick={handleSaveChanges}
+        disabled={!hasUnsavedChanges || isSaving}
+        className="px-5 py-2 text-center bg-indigo-600 text-white rounded-lg font-semibold shadow-md hover:bg-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+      >
+        {isSaving ? 'Saving...' : 'Save Changes'}
+      </button>
+    </div>
 
-        {/* Right Column: Render our new EmailEditorForm component */}
-        <div className="lg:col-span-2">
-            <EmailEditorForm
-                selectedEmail={selectedEmail}
-                onChange={handleEmailChange}
+     {/* --- NEW: Main Two-Column Layout for the Entire Page Content --- */}
+     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:items-start">
+
+{/* --- NEW: Left Column Wrapper --- */}
+<div className="space-y-8 lg:col-span-1">
+  
+  {/* Collapsible Campaign Details Section (Now inside the left column) */}
+  <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="flex justify-between items-center">
+      {/* This div now holds the conditional label and the title */}
+      <div>
+        {isDetailsCollapsed && (
+          <label className="text-sm font-medium text-gray-500">Campaign Details</label>
+        )}
+      <h1 className="text-xl font-bold text-gray-800">
+        {isDetailsCollapsed ? campaign.name : 'Editing Campaign Details'}
+      </h1>
+      </div>
+      <button 
+        onClick={() => setIsDetailsCollapsed(prev => !prev)}
+        className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
+      >
+        {isDetailsCollapsed ? 'Edit' : 'Collapse'}
+      </button>
+    </div>
+
+    {isDetailsCollapsed ? (
+      <p className="text-sm text-gray-500 mt-2 pt-4 border-t border-gray-200">
+        From: {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+      </p>
+    ) : (
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Campaign Name</label>
+            <input
+              type="text" id="name" name="name" value={campaign.name}
+              onChange={handleCampaignDetailsChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
             />
+          </div>
+          <div>
+            <label htmlFor="fromName" className="block text-sm font-medium text-gray-700">"From" Name</label>
+            <input
+              type="text" id="fromName" name="fromName" value={campaign.fromName}
+              onChange={handleCampaignDetailsChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+            <label htmlFor="fromEmail" className="block text-sm font-medium text-gray-700">"From" Email</label>
+            <input
+              type="email" id="fromEmail" name="fromEmail" value={campaign.fromEmail}
+              onChange={handleCampaignDetailsChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
         </div>
       </div>
-   </div>
+    )}
+  </div>
+
+  {/* EmailSequenceList component (Also inside the left column) */}
+  <EmailSequenceList
+    emails={campaign.emails}
+    selectedEmailId={selectedEmailId}
+    isSequenceCollapsed={isSequenceCollapsed}
+    onAddNewEmail={handleAddNewEmail}
+    onDeleteEmail={handleDeleteEmail}
+    onSelectEmail={setSelectedEmailId}
+    setIsSequenceCollapsed={setIsSequenceCollapsed}
+  />
+</div>
+
+{/* Right Column for the Email Editor Form */}
+<div className="lg:col-span-2">
+  <EmailEditorForm
+    selectedEmail={selectedEmail}
+    onChange={handleEmailChange}
+  />
+</div>
+
+</div>
+</div>
   );
 };

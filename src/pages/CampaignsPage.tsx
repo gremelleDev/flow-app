@@ -1,7 +1,7 @@
 // File: src/pages/CampaignsPage.tsx
 
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getCampaigns, createCampaign, deleteCampaign, updateCampaign, type Campaign } from '../utils/api';
 import { Edit, Trash2, Send, X } from 'lucide-react';
 
@@ -17,7 +17,6 @@ export const CampaignsPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   // State to hold any potential error messages
   const [error, setError] = useState<string | null>(null);
-
   // State for the campaign creation modal
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   // A single state object to hold all form data
@@ -25,6 +24,7 @@ export const CampaignsPage = () => {
   // This will hold the ID of the campaign we're editing, or null if we're creating
   const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   // This useEffect hook runs once when the component mounts to fetch campaigns
   useEffect(() => {
@@ -81,14 +81,6 @@ const openCreateModal = () => {
   setFormState({ name: '', fromName: '', fromEmail: '' });
   setIsModalOpen(true);
 };
-
-/*
-const openEditModal = (campaign: Campaign) => {
-  setEditingCampaignId(campaign.id);
-  setFormState({ name: campaign.name, fromName: campaign.fromName, fromEmail: campaign.fromEmail });
-  setIsModalOpen(true);
-};
-*/
 
 const closeModal = () => {
   setIsModalOpen(false);
@@ -148,37 +140,42 @@ const handleDeleteCampaign = async (campaignId: string, campaignName: string) =>
             // Grid of Campaign Cards
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {campaigns.map((campaign) => (
-              <Link key={campaign.id} to={`/campaigns/${campaign.id}/edit`}>
-                <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-800 truncate">{campaign.name}</h2>
-                      <p className="text-sm text-gray-500 mt-1">
-                        From: {campaign.fromName} &lt;{campaign.fromEmail}&gt;
-                      </p>
-                      <p className="text-xs text-gray-400 mt-2">
-                        Created: {new Date(campaign.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {/* Action Buttons */}
-                    <div className="mt-6 flex justify-end space-x-3">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation(); // <-- prevent button from triggering navigation to campaign page editor
-                          handleDeleteCampaign(campaign.id, campaign.name);
-                        }}
-                        className="p-2 text-gray-400 hover:text-red-600" 
-                        aria-label="Delete campaign">
-                        <Trash2 size={18} />
-                      </button>
-                      <Link 
-                        to={`/campaigns/${campaign.id}/edit`}
-                        className="p-2 text-gray-400 hover:text-indigo-600" 
-                        aria-label="Edit campaign">
-                        <Edit size={18} />
-                      </Link>
-                    </div>
+              
+                <div
+                  key={campaign.id}
+                  // The entire card is a div with a navigation onClick handler
+                  onClick={() => navigate(`/campaigns/${campaign.id}/edit`)}
+                  className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between hover:shadow-lg hover:border-indigo-500 border border-transparent transition-all cursor-pointer"
+                >
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800 truncate">{campaign.name}</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      From: {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Created: {new Date(campaign.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {/* Action Buttons */}
+                  <div className="mt-6 flex justify-end space-x-3">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation(); // Stop the click from navigating
+                        handleDeleteCampaign(campaign.id, campaign.name);
+                      }}
+                      className="p-2 text-gray-400 hover:text-red-600 z-10" 
+                      aria-label="Delete campaign">
+                      <Trash2 size={18} />
+                    </button>
+                    {/* The Edit "button" is now just a visual element, as the whole card is the link */}
+                    <span
+                      className="p-2 text-gray-400 hover:text-indigo-600 z-10" 
+                      aria-label="Edit campaign">
+                      <Edit size={18} />
+                    </span>
+                  </div>
                 </div>
-              </Link>          
+
               ))}
             </div>
           )}

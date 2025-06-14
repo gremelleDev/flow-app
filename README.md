@@ -151,7 +151,7 @@ The `feat/campaign-editor` branch is now **feature-complete and fully refactored
 ### Immediate Next Steps
 With the Campaign Editor feature now complete and refactored, our only immediate next step is to merge this work into our main codebase.
 
-1.  **Merge the `feat/campaign-editor` Branch**: We will merge this feature into `main` to bring all of our recent progress into the primary branch.
+1.  **Merge the `feat/campaign-editor` Branch**: We will create a Pull Request to merge this feature into `main`, which will include a final review and check of the preview deployment.
 
 ### Big Milestones We're Aiming For
 After completing and refactoring the Campaign Editor, we will continue building out the rest of the application's core functionality.

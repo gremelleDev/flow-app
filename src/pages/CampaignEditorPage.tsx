@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getCampaign, updateCampaign, type Campaign } from '../utils/api'; // We will need to create getCampaign soon
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { EmailSequenceList } from '../components/EmailSequenceList';
+import { EmailEditorForm } from '../components/EmailEditorForm';
 
 /**
  * CampaignEditorPage
@@ -202,177 +204,25 @@ export const CampaignEditorPage = () => {
       
       {/* Two-column layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:items-start">
-        
-        {/* Left Column: Email Sequence List */}
-        {/* Left Column: Email Sequence List */}
-        <div className="lg:col-span-1 bg-white p-6 rounded-lg shadow-md">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Sequence</h2>
-            <button
-              onClick={handleAddNewEmail} // This button is now separate from the collapse logic
-              // --- Add disabled attribute and styling ---
-              disabled={campaign.emails.length >= 8}
-              className="px-3 py-1 text-sm bg-indigo-100 text-indigo-700 rounded-md hover:bg-indigo-200 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-            >
-              + Add Email
-            </button>
-          </div>
-          {/* --- Informational message when limit is reached --- */}
-            {campaign.emails.length >= 8 && (
-                <div className="p-2 text-sm text-center text-orange-800 bg-orange-50 rounded-md border border-orange-200">
-                You've reached the 8 email limit for the current plan.
-                </div>
-            )}
-                    
-          {/* NEW: Mobile-only collapse/expand button */}
-          <div className="mb-4 text-right md:hidden">
-            <button
-              onClick={() => {
-                // --- THIS IS THE NEW LOGIC ---
-                // If we are collapsing the list...
-                if (!isSequenceCollapsed) {
-                  // ...and no email is selected, but there are emails in the list...
-                  if (!selectedEmailId && campaign.emails.length > 0) {
-                    // ...then automatically select the very first one.
-                    setSelectedEmailId(campaign.emails[0].id);
-                  }
-                }
-                // Finally, toggle the collapsed state
-                setIsSequenceCollapsed(prev => !prev);
-              }}
-              className="text-sm font-medium text-indigo-600 hover:text-indigo-800"
-            >
-              {isSequenceCollapsed ? 'Show Full Sequence' : 'Collapse Sequence'}
-            </button>
-          </div>
+        {/* Left Column: Render our new EmailSequenceList component */}
+          <EmailSequenceList
+              emails={campaign.emails}
+              selectedEmailId={selectedEmailId}
+              isSequenceCollapsed={isSequenceCollapsed}
+              onAddNewEmail={handleAddNewEmail}
+              onDeleteEmail={handleDeleteEmail}
+              onSelectEmail={setSelectedEmailId}
+              setIsSequenceCollapsed={setIsSequenceCollapsed}
+          />
 
-          {/* This div now conditionally hides the full list on mobile */}
-          <div className={`space-y-3 ${isSequenceCollapsed ? 'hidden' : 'block'} md:block`}>
-            {campaign.emails.length > 0 ? (
-              campaign.emails.map((email, index) => (
-                // --- A parent flex container for the number and the card ---
-                <div key={email.id} className="flex items-center gap-4">
-                  
-                  {/* The Numbered Circle */}
-                  <div className="flex-shrink-0 h-6 w-6 bg-gray-200 text-gray-600 font-semibold text-sm rounded-full flex items-center justify-center">
-                    {index + 1}
-                  </div>
-
-                  {/* The Email Card (now takes up remaining space) */}
-                  <div
-                    onClick={() => {
-                      setSelectedEmailId(email.id);
-                      setIsSequenceCollapsed(true);
-                    }}
-                    className={`flex-grow p-3 rounded-md border cursor-pointer transition-colors relative group ${
-                      selectedEmailId === email.id
-                        ? 'bg-indigo-50 border-indigo-500'
-                        : 'bg-gray-50 border-gray-200 hover:border-indigo-400'
-                    }`}
-                  >
-                    <p className="font-semibold text-gray-800 text-sm truncate">{email.subject}</p>
-                    <p className="text-xs text-gray-500 mt-1">Wait {email.delayInHours} hours</p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteEmail(email.id);
-                      }}
-                      className="absolute top-1 right-1 p-1 rounded-full text-gray-400 bg-gray-50 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 transition-opacity"
-                      aria-label="Delete email step"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-                <p className="text-sm text-gray-500">No emails in this sequence yet.</p>
-                <p className="text-xs text-gray-400 mt-1">Click "+ Add Email" to get started.</p>
-              </div>
-            )}
-          </div>
-          
-          {/* The "Compact View" that appears on mobile when collapsed */}
-          {isSequenceCollapsed && selectedEmail && (
-            <div className="mt-4 md:hidden">
-              <p className="text-sm text-gray-500">Currently editing:</p>
-              <div
-                onClick={() => setIsSequenceCollapsed(false)} // Click to re-expand the list
-                className="mt-1 p-3 rounded-md border-2 border-indigo-500 bg-indigo-50 cursor-pointer"
-              >
-                <p className="font-semibold text-gray-800 text-sm truncate">{selectedEmail.subject}</p>
-                <p className="text-xs text-gray-500 mt-1">Wait {selectedEmail.delayInHours} hours</p>
-              </div>
-              {/* Placeholder for up/down arrows */}
-              <p className="text-center text-xs text-gray-400 mt-2">Up/Down arrows will go here</p>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Email Editor (Placeholder) */}
-                {/* Right Column: Email Editor */}
+        {/* Right Column: Render our new EmailEditorForm component */}
         <div className="lg:col-span-2">
-          {selectedEmail ? (
-            // --- If an email IS selected, show the editor form ---
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-lg font-semibold mb-4">Edit Email</h2>
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    value={selectedEmail.subject}
-                    onChange={handleEmailChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="delayInHours" className="block text-sm font-medium text-gray-700">
-                    Delay (in hours)
-                  </label>
-                  <input
-                    type="number"
-                    id="delayInHours"
-                    name="delayInHours"
-                    value={selectedEmail.delayInHours}
-                    onChange={handleEmailChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="body" className="block text-sm font-medium text-gray-700">
-                    Body
-                  </label>
-                  <textarea
-                    id="body"
-                    name="body"
-                    rows={10}
-                    value={selectedEmail.body}
-                    onChange={handleEmailChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono"
-                  />
-                </div>
-              </form>
-            </div>
-          ) : (
-            // --- If NO email is selected, show a helpful placeholder ---
-            <div className="flex items-center justify-center h-full bg-white p-6 rounded-lg shadow-md text-center">
-              <div>
-                <p className="font-semibold text-gray-700">Select an email to edit</p>
-                <p className="text-sm text-gray-500 mt-1">Or click "+ Add Email" to create a new one.</p>
-              </div>
-            </div>
-          )}
+            <EmailEditorForm
+                selectedEmail={selectedEmail}
+                onChange={handleEmailChange}
+            />
         </div>
-
       </div>
-    </div>
+   </div>
   );
 };

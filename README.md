@@ -51,22 +51,25 @@ This project is built on a specific set of modern technologies and principles. O
 
 This diagram illustrates how the components of our stack interact.
 
-mermaid
+```markdown
+```mermaid
 graph TD
     A[User's Browser] --> B{Cloudflare Pages};
     B --> C[React App];
     C --> D[Cloudflare Functions API];
     D --> E[Cloudflare KV];
     D --> F[Firebase Auth];
+
     subgraph "Cloudflare Edge Network"
         B
         D
         E
     end
+
     subgraph "Google Cloud"
         F
     end
-
+```
 ---
 
 ### Core Technologies & Principles

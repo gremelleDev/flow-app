@@ -1,6 +1,7 @@
 // File: src/pages/CampaignsPage.tsx
 
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { getCampaigns, createCampaign, deleteCampaign, updateCampaign, type Campaign } from '../utils/api';
 import { Edit, Trash2, Send, X } from 'lucide-react';
 
@@ -81,11 +82,13 @@ const openCreateModal = () => {
   setIsModalOpen(true);
 };
 
+/*
 const openEditModal = (campaign: Campaign) => {
   setEditingCampaignId(campaign.id);
   setFormState({ name: campaign.name, fromName: campaign.fromName, fromEmail: campaign.fromEmail });
   setIsModalOpen(true);
 };
+*/
 
 const closeModal = () => {
   setIsModalOpen(false);
@@ -145,32 +148,37 @@ const handleDeleteCampaign = async (campaignId: string, campaignName: string) =>
             // Grid of Campaign Cards
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {campaigns.map((campaign) => (
-                <div key={campaign.id} className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-800 truncate">{campaign.name}</h2>
-                    <p className="text-sm text-gray-500 mt-1">
-                      From: {campaign.fromName} &lt;{campaign.fromEmail}&gt;
-                    </p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      Created: {new Date(campaign.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  {/* Action Buttons */}
-                  <div className="mt-6 flex justify-end space-x-3">
-                    <button 
-                      onClick={() => handleDeleteCampaign(campaign.id, campaign.name)}
-                      className="p-2 text-gray-400 hover:text-red-600" 
-                      aria-label="Delete campaign">
-                       <Trash2 size={18} />
-                    </button>
-                    <button 
-                      onClick={() => openEditModal(campaign)}
-                      className="p-2 text-gray-400 hover:text-indigo-600" 
-                      aria-label="Edit campaign">
-                      <Edit size={18} />
-                    </button>
-                  </div>
+              <Link key={campaign.id} to={`/campaigns/${campaign.id}/edit`}>
+                <div className="bg-white rounded-lg shadow-md p-6 flex flex-col justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-gray-800 truncate">{campaign.name}</h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        From: {campaign.fromName} &lt;{campaign.fromEmail}&gt;
+                      </p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Created: {new Date(campaign.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    {/* Action Buttons */}
+                    <div className="mt-6 flex justify-end space-x-3">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation(); // <-- prevent button from triggering navigation to campaign page editor
+                          handleDeleteCampaign(campaign.id, campaign.name);
+                        }}
+                        className="p-2 text-gray-400 hover:text-red-600" 
+                        aria-label="Delete campaign">
+                        <Trash2 size={18} />
+                      </button>
+                      <Link 
+                        to={`/campaigns/${campaign.id}/edit`}
+                        className="p-2 text-gray-400 hover:text-indigo-600" 
+                        aria-label="Edit campaign">
+                        <Edit size={18} />
+                      </Link>
+                    </div>
                 </div>
+              </Link>          
               ))}
             </div>
           )}

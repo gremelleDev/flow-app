@@ -1,6 +1,6 @@
-# FunnelFlow Project
+# FunelFlo Project
 
-FunnelFlow is a powerful, multi-tenant SaaS platform designed to simplify email marketing automation. It provides users with the tools to create and manage sophisticated email autoresponder campaigns, handle subscriber lists, and integrate with their preferred email sending services.
+FunelFlo is a powerful, multi-tenant SaaS platform designed to simplify email marketing automation. It provides users with the tools to create and manage sophisticated email autoresponder campaigns, handle subscriber lists, and integrate with their preferred email sending services.
 
 The core goal of this project is to offer a flexible and secure email marketing solution for businesses and creators. Each user or organization operates within their own isolated tenant account, ensuring data privacy. A key feature is the ability for users to securely connect their own email providers (e.g., Resend, Brevo) via encrypted API keys, giving them full control over their sending infrastructure and reputation.
 
@@ -51,22 +51,25 @@ This project is built on a specific set of modern technologies and principles. O
 
 This diagram illustrates how the components of our stack interact.
 
-mermaid
+```markdown
+```mermaid
 graph TD
     A[User's Browser] --> B{Cloudflare Pages};
     B --> C[React App];
     C --> D[Cloudflare Functions API];
     D --> E[Cloudflare KV];
     D --> F[Firebase Auth];
+
     subgraph "Cloudflare Edge Network"
         B
         D
         E
     end
+
     subgraph "Google Cloud"
         F
     end
-
+```
 ---
 
 ### Core Technologies & Principles
@@ -129,7 +132,7 @@ As a best practice, we will include a `schemaVersion` number inside the JSON obj
 ### What We've Accomplished So Far
 We have successfully built a robust, secure, and well-architected foundation for the application. The groundwork for all future features is now complete.
 
-* **Project Foundation**: We have a modern application built with React, TypeScript, and Vite, deployed on Cloudflare Pages. The backend is powered by serverless Cloudflare Functions with Cloudflare KV as the database.
+* **Project Foundation**: We have a modern application built with React, TypeScript, and Vite, deployed on Cloudflare Pages. The backend is powered by serverless Cloudflare Functions with Cloudflare KV for the database.
 * **Secure End-to-End Feature**: The "Settings" page is fully functional. It allows for managing multiple email provider configurations, and all sensitive API keys are securely encrypted at rest before being saved.
 * **Robust User Authentication**: We have a complete authentication system using Firebase, including persistent user sessions and a dedicated login page.
 * **Dynamic Role-Based Access Control (RBAC)**: We have a system for "super admin" users, with roles read dynamically from the user's token to control the UI.
@@ -139,29 +142,38 @@ We have successfully built a robust, secure, and well-architected foundation for
 * **Core Subscriber Management**: The first full-stack CRUD feature for Subscribers is complete and merged into `main`.
 * **Core Campaign Management (CRUD)**: The foundational Create, Read, Update, and Delete functionality for Campaigns is complete.
     * We built a secure, full-featured backend API at `/api/campaigns`.
-    * We implemented the `CampaignsPage` UI to display campaigns as cards and allow users to create, edit, and delete them using a reusable modal.
+    * We implemented the `CampaignsPage` UI to display campaigns as cards and allow users to create them using a reusable modal.
+* **Campaign Editor MVP Complete**: Built a complete, end-to-end feature for editing campaign email sequences. This includes a fully interactive UI for adding, deleting, and editing email steps, and the ability to persist all changes to the backend with a "Save" button. The UI has also been hardened with responsive layouts and safeguards like sequence limits.
 
 ### What We're Currently Working On
-The foundational CRUD functionality for the Campaigns feature is now complete on the `feat/campaigns-crud` branch. This branch is ready for final review and merging into `main`.
+The `feat/campaign-editor` branch is now **feature-complete and fully refactored**. All state management and backend persistence for the Campaign Editor are working correctly, and the code has been organized for long-term health. The branch is now ready for final review and merging.
 
 ### Immediate Next Steps
-With the campaign container built, our next focus is to allow users to build the actual email sequences inside them.
+With the Campaign Editor feature now complete and refactored, our only immediate next step is to merge this work into our main codebase.
 
-1.  **Merge Campaigns Branch**: We will merge the `feat/campaigns-crud` branch into `main` to lock in our progress.
-2.  **Build the Campaign Editor**: Our next major task is to build the UI for the campaign editor. This will be a new page or view where users can:
-    * Add individual email steps to a campaign.
-    * Define the subject line and content for each email.
-    * Set the sending delay for each step (e.g., "send 24 hours after the previous email").
+1.  **Merge the `feat/campaign-editor` Branch**: We will merge this feature into `main` to bring all of our recent progress into the primary branch.
 
 ### Big Milestones We're Aiming For
-After completing the Campaign Editor, we will continue building out the rest of the application's core functionality.
+After completing and refactoring the Campaign Editor, we will continue building out the rest of the application's core functionality.
 
 * **Subscriber Segmentation**:
     * Design and implement a system for adding tags and lists to subscribers.
     * Update the UI to allow for managing tags and filtering the subscriber list.
     * Connect campaigns to specific subscriber tags or lists.
+* **UX: "Unsaved Changes" Warning**:
+    * **Goal:** Prevent users from accidentally losing work by navigating away from an editor with unsaved changes.
+    * **Plan:**
+        1. Implement a custom hook (`useUnsavedChangesWarning`) that uses the browser's `beforeunload` event.
+        2. Integrate this hook into the `CampaignEditorPage` to show a native browser confirmation dialog if `hasUnsavedChanges` is true.
 * **Email Sending Engine**: Develop the core backend logic (likely using Cloudflare Cron Triggers) that will handle the scheduling and sending of all emails based on campaign rules.
 * **Full Super Admin Functionality**: Build out the `TenantsPage` to allow a super admin to view and manage data for different tenants.
+* **UI/UX Polish: Reusable Confirmation Modal**:
+    * **Goal:** Replace all native `window.confirm()` dialogs with a consistent, reusable, and branded confirmation modal to improve the user experience for destructive actions.
+    * **Plan:**
+        1. Design and build a generic `ConfirmationModal.tsx` component that accepts props like `title`, `message`, and an `onConfirm` callback function.
+        2. Refactor the `handleDeleteCampaign` function in `CampaignsPage.tsx` to use this new modal.
+        3. Refactor the `handleDeleteSubscriber` function in `SubscribersPage.tsx` to use this new modal.
+        4. Ensure this modal is used for all future destructive actions in the application.
 * **Future User-Requested Features**:
     * Build a dedicated Sign-up Page to collect a user's full name.
     * Build an Account Settings/Billing Page.
